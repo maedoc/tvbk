@@ -28,10 +28,11 @@ jobs:
         run: |
           cmake -B build -S .
           cmake --build build
+          copy build\Debug\libtvbk.dll libtvbk.so
       - uses: actions/upload-artifact@v4
         with:
           name: libtvbk-windows-latest
-          path: build/Debug/libtvbk.dll
+          path: libtvbk.so
 
   build_wheel:
     name: build ctypes-based wheel

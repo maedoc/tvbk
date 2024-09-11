@@ -25,7 +25,7 @@ test: test.c tvbk.h $(OBJ)
 	$(CXX) -static test.o $(OBJ) -o $@ -lm
 
 tvbk.py: tvbk.h	
-	ctypesgen -l libtvbk.so -l libtvbk.dll tvbk.h > tvbk.py
+	ctypesgen -l libtvbk.so tvbk.h > tvbk.py
 
 tvbk.wasm: em.cpp tvbk.h $(SRC)
 	emcc -lembind -o tvbk.js em.cpp $(SRC)
