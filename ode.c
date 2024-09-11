@@ -10,13 +10,18 @@
    implementation of functions liek tvbk_bistable, etc.
    They evaluate the ODEs for WIDTH nodes at a time. */
 
+/* clang doesn't like these pragmas, wtf
+    _Pragma("GCC unroll _nsvar") \
+    _Pragma("GCC ivdep") \
+    */
+
+
+
 #define make_ode_step(model, nsvar, width) \
 tvbk_declare_ode_step(model) \
 { \
     const int _nsvar = nsvar; \
     float x[nsvar*width], xi[nsvar*width], dx1[nsvar*width], dx2[nsvar*width], z[nsvar*width]; \
-    _Pragma("GCC unroll _nsvar") \
-    _Pragma("GCC ivdep") \
     for (int svar=0; svar < nsvar; svar++) \
     { \
         load ## width(x+svar*width, s->states+width*(i_node + s->num_node*svar)); \
@@ -28,15 +33,11 @@ tvbk_declare_ode_step(model) \
      \
     dfun_ ## model ## width(x, x+width, cx1, s->params, s->params+width, s->params+2*width, dx1, dx1+width); \
 \
-    _Pragma("GCC unroll _nsvar") \
-    _Pragma("GCC ivdep") \
     for (int svar=0; svar < nsvar; svar++) \
         heunpred8(x+svar*width, xi+svar*width, dx1+svar*width, s->dt); \
        \
     dfun_ ## model ## width(xi, xi+width, cx2, s->params, s->params+width, s->params+2*width, dx2, dx2+width); \
 \
-    _Pragma("GCC unroll _nsvar") \
-    _Pragma("GCC ivdep") \
     for (int svar=0; svar < nsvar; svar++) \
     { \
         heuncorr ## width(x+svar*width, dx1+svar*width, dx2+svar*width, s->dt); \
