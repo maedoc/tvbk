@@ -36,19 +36,19 @@ verify_so_path:
 
 wheel:
 	pip wheel .
-	python3 -m wheel tags --platform-tag $(shell python3 -c 'import sysconfig; print(sysconfig.get_platform().replace("-","_"))') tvb_kernels-*-py3-none-any.whl
-	rm tvb_kernels-*-py3-none-any.whl
+	# python3 -m wheel tags --platform-tag manylinux2010 tvb_kernels-*-py3-none-any.whl
+	# rm tvb_kernels-*-py3-none-any.whl
 
 tag:
 	git tag $(shell python3 -c "import tvb_kernels; print(tvb_kernels.__version__)")
 
 cleantest:
-	git clean -xf
+	make clean
 	make -B -j
 	./test
 	make wheel
 	pip uninstall -y tvb_kernels || true
-	pip install tvb_kernels-*-py3-none-linux_x86_64.whl
+	pip install tvb_kernels-*.whl
 	make clean
 	make verify_so_path
 	pytest tests.py
