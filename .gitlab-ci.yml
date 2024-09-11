@@ -1,0 +1,47 @@
+variables:
+  tag: docker-registry.ebrains.eu/ins-amu/tvbk:240911
+
+stages:
+  - images
+  - build
+  - test
+
+build_img:
+  stage: images
+  tags:
+    - rtx4-bash
+  script:
+    - docker build -t $tag .
+    - docker login -u woodman -p $harbor_token docker-registry.ebrains.eu
+    - docker push $tag
+  rules:
+    - changes:
+        - Dockerfile
+
+build:
+  stage: build
+  image: $tag
+  tags:
+    - rtx4-docker
+  script:
+    - make cleantest
+  artifacts:
+    paths:
+      - tvb_kernels-*-py3-*.whl
+
+test:
+  stage: test
+  image: $tag
+  tags:
+    - rtx4-docker
+  dependencies:
+    - build
+  script:
+    - pip install tvb_kernels*.whl
+    - make verify_so_path
+    - pytest tests.py
+
+# TODO push tags to pypi
+# TODO push releases on gitlab
+# TODO spack package test
+  

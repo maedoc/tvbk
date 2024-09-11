@@ -1,0 +1,18 @@
+spack:
+
+  specs:
+  - gcc
+  - py-numpy
+  - py-scipy
+  - py-pip
+  - random123
+
+  concretizer:
+    unify: true
+
+  mirrors:
+    esd:
+      url: oci://docker-registry.ebrains.eu/brainscales/esd_build_cache
+    local-buildcache:
+      url: oci://ghcr.io/maedoc/spack-buildcache
+      signed: false

@@ -1,0 +1,14 @@
+.cache
+*.jpg
+.spack-env
+spack.lock
+*.whl
+*.so
+*.o
+tvbk.js
+tvbk.wasm
+compile_commands.json
+__pycache__
+tvbk.py
+env
+test
