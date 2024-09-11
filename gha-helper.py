@@ -3,12 +3,18 @@ import subprocess
 import glob
 import shutil
 import os
+import platform
+
+printf(f'[{__file__}] have processor {platform.processor()}')
 
 matrix_os = {'linux': 'ubuntu-latest',
              'win32': 'windows-latest',
-             'macos': 'macos-13'}[sys.platform]
+             'darwin': 'macos-13'}[sys.platform]
 
-so_names = glob.glob(f'libtvbk-{matrix_os}/libtvbk.so')
+if 'macos' in matrix_os and 'x86_64' not in platform.processor():
+    matrix_os = 'macos-14'
+
+so_name, = glob.glob(f'libtvbk-{matrix_os}/libtvbk.so')
 print(f'[{__file__}] found artifact {so_name}')
 
 whl_name, = glob.glob('*/*.whl')
