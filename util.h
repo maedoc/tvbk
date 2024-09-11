@@ -10,14 +10,14 @@
   the forced inlining then allows the compiler to see that the pointers
   aren't aliased, etc, removing further overhead.
 */
+#ifndef _MSC_VER
+
 #ifdef NOINLINE
 #define INLINE __attribute__((noinline))
 #else
 #define INLINE __attribute__((always_inline)) inline
 #endif
 
-/* this isn't expected to be used in a public api, so the names are just 
-   the kernel name and width, e.g. sigm8, cosf8 */
 #define kernel(name, width, expr, args...) \
 INLINE static void name ## width (args) \
 { \
@@ -25,6 +25,19 @@ INLINE static void name ## width (args) \
   for (int i=0; i < width; i++) \
     expr;\
 }
+#else
+#define INLINE
+
+#define kernel(name, width, expr, ...) \
+INLINE static void name ## width (__VA_ARGS__) \
+{ \
+  _Pragma("loop(hint_parallel(8))") \
+  _Pragma("loop(ivdep)") \
+  for (int i=0; i < width; i++) \
+    expr;\
+}
+
+#endif
 
 /* simple stuff */
 kernel(inc,      8, x[i]                    += w*y[i], float *x, float *y, float w)
