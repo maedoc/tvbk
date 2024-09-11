@@ -1,15 +1,18 @@
 # run `bear -- make -B -j` to get compile_commands.json
 
+r123ver = 1.14.0
+r123inc = random123-$(r123ver)/include
+
 OPT = -g -O3 -funroll-loops -fopenmp-simd -ffast-math
 # OPT = -g -Og
 CFLAGS = $(OPT) -Wall -Wextra -Wimplicit-fallthrough
-CXXFLAGS = $(OPT)
+CXXFLAGS = $(OPT) -I$(r123inc)
 CSRC = conn.c ode.c matmul.c ops.c # csr8.c
 CXXSRC = r123.cpp
 OBJ = $(patsubst %.c,%.o,$(CSRC)) $(patsubst %.cpp,%.o,$(CXXSRC))
 SO = libtvbk.so
 
-all: $(SO) tvbk.py test
+all: philox $(SO) tvbk.py test
 
 $(SO) : $(OBJ)
 	$(CXX) -shared $^ -o $@
@@ -49,3 +52,10 @@ cleantest:
 	make clean
 	make verify_so_path
 	pytest tests.py
+
+philox: $(r123inc)/Random123/philox.h
+
+$(r123inc)/Random123/philox.h:
+	curl -LO https://github.com/DEShawResearch/random123/archive/refs/tags/v$(r123ver).tar.gz
+	tar xzf v$(r123ver).tar.gz
+	rm v$(r123ver).tar.gz
