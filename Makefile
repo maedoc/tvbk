@@ -3,7 +3,7 @@
 r123ver = 1.14.0
 r123inc = random123-$(r123ver)/include
 
-OPT = -g -O3 -funroll-loops -fopenmp-simd -ffast-math
+OPT = -O3 -funroll-loops -fopenmp-simd -ffast-math
 # OPT = -g -Og
 CFLAGS = $(OPT) -Wall -Wextra -Wimplicit-fallthrough
 CXXFLAGS = $(OPT) -I$(r123inc)
@@ -18,7 +18,7 @@ philox = $(r123inc)/Random123/philox.h
 all: $(SO) tvbk.py test
 
 $(SO) : $(philox) $(OBJ)
-	$(CXX) -shared $(OBJ) -o $@
+	$(CXX) -shared -static-libgcc -static-libstdc++ $(OBJ) -o $@
 
 test: test.c tvbk.h $(OBJ)
 	$(CC) $(CFLAGS) -c test.c
