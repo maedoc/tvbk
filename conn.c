@@ -2,7 +2,7 @@
 
 #include "util.h"
 
-static void INLINE cx_all_j(const tvbk_cx *cx, const tvbk_conn *c, uint32_t t,
+INLINE static void cx_all_j(const tvbk_cx *cx, const tvbk_conn *c, uint32_t t,
                             uint32_t j) {
   uint32_t wrap_mask = cx->num_time - 1; // assume num_time is power of 2
   float *const buf = cx->buf + j * cx->num_time;
@@ -48,6 +48,7 @@ void tvbk_cx_i(const tvbk_cx *cx, const tvbk_conn *c, uint32_t t) {
 }
 
 void tvbk_cx_nop(const tvbk_cx *cx, const tvbk_conn *c, uint32_t t) {
+  (void)cx;
   (void)c;
   (void)t;
 

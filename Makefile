@@ -12,10 +12,12 @@ CXXSRC = r123.cpp
 OBJ = $(patsubst %.c,%.o,$(CSRC)) $(patsubst %.cpp,%.o,$(CXXSRC))
 SO = libtvbk.so
 CC = gcc
+CXX = g++
+philox = $(r123inc)/Random123/philox.h
 
 all: $(SO) tvbk.py test
 
-$(SO) : philox $(OBJ)
+$(SO) : $(philox) $(OBJ)
 	$(CXX) -shared $(OBJ) -o $@
 
 test: test.c tvbk.h $(OBJ)
@@ -35,7 +37,7 @@ clean:
 verify_so_path:
 	python3 -c "import tvb_kernels as tk; print( tk.tvbk._libs['libtvbk.so'].access['cdecl']._name)" | grep python.*packages
 
-wheel:
+wheel: tvbk.py
 	pip wheel .
 	# python3 -m wheel tags --platform-tag manylinux2010 tvb_kernels-*-py3-none-any.whl
 	# rm tvb_kernels-*-py3-none-any.whl

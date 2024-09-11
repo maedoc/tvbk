@@ -19,7 +19,7 @@
 /* this isn't expected to be used in a public api, so the names are just 
    the kernel name and width, e.g. sigm8, cosf8 */
 #define kernel(name, width, expr, args...) \
-static void INLINE name ## width (args) \
+INLINE static void name ## width (args) \
 { \
   _Pragma("omp simd") \
   for (int i=0; i < width; i++) \
@@ -60,7 +60,7 @@ kernel(erff,  8, x[i] = erff(y[i]), float *x, float *y)
 
 /* short length dot product accumulates, so doesn't fit into 
    macro above */
-static void INLINE dot8(float *dst, float *x, float *y)
+INLINE static void dot8(float *dst, float *x, float *y)
 {
     float acc=0.f;
     #pragma omp simd reduction(+:acc)
