@@ -19,7 +19,8 @@ print(f'[{__file__}] found artifact {so_name}')
 
 whl_name, = glob.glob('*/*.whl')
 print(f'[{__file__}] installing {whl_name}')
-subprocess.check_output([sys.executable, '-m', 'pip', whl_name])
+# subprocess.check_output([sys.executable, '-m', 'pip', whl_name])
+os.system(f'{sys.executable} -m pip {whl_name}')
 
 import site
 
