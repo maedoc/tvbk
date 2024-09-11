@@ -8,7 +8,7 @@ import scipy.sparse
 # ctypesgen module
 import tvbk
 
-__version__ = 'v0.3'
+__version__ = 'v0.4'
 
 
 def _to_ct(a):
