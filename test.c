@@ -1,9 +1,10 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "utest.h"
 #include "tvbk.h"
 
-static void test_ops() {
+UTEST(ops, cx0_run) {
 
   tvbk_cx cx = {.num_node = 0, .num_time = 0};
   tvbk_conn conn = {.num_node = 0, .num_cvar = 0, .num_nonzero = 0};
@@ -25,4 +26,4 @@ static void test_ops() {
   tvbk_ops_run1(loop);
 }
 
-int main() { test_ops(); }
+UTEST_MAIN()

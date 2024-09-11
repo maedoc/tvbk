@@ -18,7 +18,7 @@ philox = $(r123inc)/Random123/philox.h
 all: $(SO) tvbk.py test
 
 $(SO) : $(philox) $(OBJ)
-	$(CXX) -shared -static-libgcc -static-libstdc++ $(OBJ) -o $@
+	$(CXX) -shared $(OBJ) -o $@
 
 test: test.c tvbk.h $(OBJ)
 	$(CC) $(CFLAGS) -c test.c
