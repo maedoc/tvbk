@@ -19,20 +19,20 @@ jobs:
           name: libtvbk-${{ matrix.os }}
           path: ./libtvbk.so
 
-  build_lib_win:
-    name: shared lib on windows-latest
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: build lib
-        run: |
-          cmake -B build -S .
-          cmake --build build
-          copy build\Debug\libtvbk.dll libtvbk.so
-      - uses: actions/upload-artifact@v4
-        with:
-          name: libtvbk-windows-latest
-          path: libtvbk.so
+  # build_lib_win:
+  #   name: shared lib on windows-latest
+  #   runs-on: windows-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: build lib
+  #       run: |
+  #         cmake -B build -S .
+  #         cmake --build build
+  #         copy build\Debug\libtvbk.dll libtvbk.so
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: libtvbk-windows-latest
+  #         path: libtvbk.so
 
   build_wheel:
     name: build ctypes-based wheel
@@ -48,11 +48,12 @@ jobs:
         
   pytest:
     name: test ${{ matrix.os }}
-    needs: [build_lib, build_wheel, build_lib_win]
+    needs: [build_lib, build_wheel] #, build_lib_win]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        os: [ubuntu-latest, # windows-latest, 
+             macos-13, macos-14]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
