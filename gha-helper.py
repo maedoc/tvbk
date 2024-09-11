@@ -5,25 +5,16 @@ import shutil
 import os
 import platform
 
-print(f'[{__file__}] have processor {platform.processor()}')
-
-matrix_os = {'linux': 'ubuntu-latest',
-             'win32': 'windows-latest',
-             'darwin': 'macos-13'}[sys.platform]
-
-if 'macos' in matrix_os and 'x86_64' not in platform.processor():
-    matrix_os = 'macos-14'
+matrix_os, = sys.argv[1:]
 
 so_name, = glob.glob(f'libtvbk-{matrix_os}/libtvbk.so')
 print(f'[{__file__}] found artifact {so_name}')
 
-whl_name, = glob.glob('*/*.whl')
+whl_name, = glob.glob('tvbk-kernels-wheel/tvb_kernels*.whl')
 print(f'[{__file__}] installing {whl_name}')
-# subprocess.check_output([sys.executable, '-m', 'pip', whl_name])
-os.system(f'{sys.executable} -m pip {whl_name}')
+os.system(f'{sys.executable} -m pip install {whl_name}')
 
 import site
-
 tvbk_name = None
 for pkg in site.getsitepackages():
     fs = glob.glob(os.path.join(pkg, 'tvbk.py'))
