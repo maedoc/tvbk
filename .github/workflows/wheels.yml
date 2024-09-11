@@ -30,6 +30,7 @@ jobs:
         
   pytest:
     name: test ${{ matrix.os }}
+    needs: [build_lib, build_wheel]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
