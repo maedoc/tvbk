@@ -5,7 +5,7 @@ import shutil
 import os
 import platform
 
-printf(f'[{__file__}] have processor {platform.processor()}')
+print(f'[{__file__}] have processor {platform.processor()}')
 
 matrix_os = {'linux': 'ubuntu-latest',
              'win32': 'windows-latest',
