@@ -11,6 +11,7 @@ CSRC = conn.c ode.c matmul.c ops.c # csr8.c
 CXXSRC = r123.cpp
 OBJ = $(patsubst %.c,%.o,$(CSRC)) $(patsubst %.cpp,%.o,$(CXXSRC))
 SO = libtvbk.so
+CC = gcc
 
 all: $(SO) tvbk.py test
 
