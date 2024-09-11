@@ -12,9 +12,9 @@ CXXSRC = r123.cpp
 OBJ = $(patsubst %.c,%.o,$(CSRC)) $(patsubst %.cpp,%.o,$(CXXSRC))
 SO = libtvbk.so
 
-all: philox $(SO) tvbk.py test
+all: $(SO) tvbk.py test
 
-$(SO) : $(OBJ)
+$(SO) : philox $(OBJ)
 	$(CXX) -shared $^ -o $@
 
 test: test.c tvbk.h $(OBJ)
