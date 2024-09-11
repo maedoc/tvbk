@@ -38,10 +38,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-      - run: ls -lh
-      - run: unzip *.zip
       - run: python -m pip install -U pytest
-      - run: python -m pip install tvb_kernels*.whl
+      - run: python -m pip install tvbk-kernels-wheel/*.whl
       # TODO put the .so into site-packages
-      - run: pytest tests.py
+      - run: LD_LIBRARY_PATH=libtvbk-${{ matrix.os }} pytest tests.py
 
