@@ -13,7 +13,7 @@ jobs:
         run: make libtvbk.so
       - uses: actions/upload-artifact@v4
         with:
-          name: libtvk-${{ matrix.os }}
+          name: libtvbk-${{ matrix.os }}
           path: ./libtvbk.so
 
   build_wheel:
@@ -25,7 +25,7 @@ jobs:
       - run: make wheel
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel
+          name: tvbk-kernels-wheel
           path: ./tvb_kernels-*-py3-none-any.whl
         
   pytest:
@@ -37,6 +37,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
+      - run: ls -lh
+      - run: unzip *.zip
       - run: python -m pip install -U pytest
       - run: python -m pip install tvb_kernels*.whl
       # TODO put the .so into site-packages
