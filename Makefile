@@ -15,7 +15,7 @@ SO = libtvbk.so
 all: $(SO) tvbk.py test
 
 $(SO) : philox $(OBJ)
-	$(CXX) -shared $^ -o $@
+	$(CXX) -shared $(OBJ) -o $@
 
 test: test.c tvbk.h $(OBJ)
 	$(CC) $(CFLAGS) -c test.c
