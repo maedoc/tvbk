@@ -1,63 +1,28 @@
-name: make
+name: build & test
 on: [push, pull_request]
 jobs:
-  build_lib:
+
+  build_wheels:
     name: shared lib on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # TODO windows-latest
-        os: [ubuntu-latest, macos-13, macos-14]
+        os: [ubuntu-latest, macos-13, macos-14, windows-latest]
     steps:
       - uses: actions/checkout@v4
-      - name: build lib
-        run: make libtvbk.so
-      - name: check links
-        run: ldd libtvbk.so || true
+      - uses: pypa/cibuildwheel@v2.19
       - uses: actions/upload-artifact@v4
         with:
-          name: libtvbk-${{ matrix.os }}
-          path: ./libtvbk.so
+          name: dist-${{ matrix.os }}
+          path: wheelhouse/*.whl
 
-  # build_lib_win:
-  #   name: shared lib on windows-latest
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: build lib
-  #       run: |
-  #         cmake -B build -S .
-  #         cmake --build build
-  #         copy build\Debug\libtvbk.dll libtvbk.so
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: libtvbk-windows-latest
-  #         path: libtvbk.so
-
-  build_wheel:
-    name: build ctypes-based wheel
-    runs-on: ubuntu-latest
+  merge_wheels:
+    name: merge wheels into single artifact
+    needs: [build_wheels] #, build_sdist]
     steps:
-      - uses: actions/checkout@v4
-      - run: python -m pip install -U ctypesgen wheel pip
-      - run: make wheel
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact/merge@v4
         with:
-          name: tvbk-kernels-wheel
-          path: ./tvb_kernels-*-py3-none-any.whl
-        
-  pytest:
-    name: test ${{ matrix.os }}
-    needs: [build_lib, build_wheel] #, build_lib_win]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, # windows-latest, 
-             macos-13, macos-14]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-      - run: python -m pip install -U pytest
-      - run: python gha-helper.py ${{ matrix.os }}
-      - run: pytest tests.py
+          name: dist
+          pattern: dist-*
+
 

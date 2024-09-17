@@ -12,7 +12,6 @@ authors = [
 ]
 classifiers = [ "License :: BSD", ]
 dependencies = [ "numpy", "scipy" ]
-# dynamic = ["version"]
 version = "v0.5"
 
 [project.urls]
@@ -26,13 +25,9 @@ build-dir = "build/{wheel_tag}"
 # Build stable ABI wheels for CPython 3.12+
 wheel.py-api = "cp312"
 
-# metadata.version.provider = "tvb_kernels.py"
-
 [tool.cibuildwheel]
 build-verbosity = 1
-test-command = "pytest tests_nb.py"
+test-command = "pytest"
 test-requires = "pytest"
 skip = ["pp*"] # don't build pypy wheels
 archs = ["auto"]
-
-
