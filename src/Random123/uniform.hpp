@@ -85,7 +85,7 @@ copy it and modify it for their own use.  We invite comments and
 improvements.
 */
 
-#include <Random123/features/compilerfeatures.h>
+#include "features/compilerfeatures.h"
 #include <limits>
 #if R123_USE_CXX11_TYPE_TRAITS
 #include <type_traits>

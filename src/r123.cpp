@@ -1,10 +1,11 @@
 #include <stdint.h>
 #include <math.h>
-#include <Random123/philox.h>
 
+
+#include "Random123/philox.h"
 /* doesn't have sincosf ? */
 #ifndef _MSC_VER
-#include <Random123/boxmuller.hpp>
+#include "Random123/boxmuller.hpp"
 #endif
 
 #define M_PI_2 ((float) (2.0f * 3.141592653589f))
