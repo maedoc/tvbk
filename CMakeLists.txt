@@ -5,8 +5,6 @@ if (NOT SKBUILD)
   message(WARNINIG "use pip install . instead!")
 endif()
 
-include(FetchContent)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -22,10 +20,7 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
 find_package(nanobind CONFIG REQUIRED)
 
-FetchContent_Declare(random123 URL https://github.com/DEShawResearch/random123/archive/refs/tags/v1.14.0.zip)
-FetchContent_MakeAvailable(random123)
 add_library(tvbk STATIC src/conn.c src/r123.cpp src/matmul.c src/ode.c src/ops.c)
-target_include_directories(tvbk PRIVATE "$CMAKE_SOURCE_DIR" "build/_deps/random123-src/include")
 
 nanobind_add_module(_nanobound STABLE_ABI src/nanobound.cpp)
 target_link_libraries(_nanobound PRIVATE tvbk)
