@@ -15,7 +15,9 @@ jobs:
         with:
           name: dist-${{ matrix.os }}
           path: wheelhouse/*.whl
-
+      - run: pip install pytest
+      - run: pip install . && pytest
+        
   merge_wheels:
     name: merge wheels into single artifact
     runs-on: ubuntu-latest
@@ -26,17 +28,6 @@ jobs:
           name: dist
           pattern: dist-*
 
-  test_wheels:
-    name: test on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-13, macos-14, windows-latest]
-    steps:
-      - uses: actions/checkout@v4
-      - run: pip install pytest
-      - run: pytest
-    
   upload_pypi:
     name: upload wheels to pypi on tag
     runs-on: ubuntu-latest
