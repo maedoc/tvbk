@@ -28,7 +28,7 @@ wheel.py-api = "cp312"
 [tool.cibuildwheel]
 build-verbosity = 1
 test-command = "cd {project}/tests; pytest"
-test-requires = "pytest numpy==1.24 scipy"
+test-requires = "pytest numpy==1.24 scipy nanobind"
 skip = ["pp*"] # don't build pypy wheels
 archs = ["auto"]
 
