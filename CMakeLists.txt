@@ -20,7 +20,7 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
 find_package(nanobind CONFIG REQUIRED)
 
-add_library(tvbk STATIC src/conn.c src/r123.cpp src/matmul.c src/ode.c src/ops.c)
+add_library(tvbk src/conn.c src/r123.cpp src/matmul.c src/ode.c src/ops.c)
 
 nanobind_add_module(_nanobound STABLE_ABI src/nanobound.cpp)
 target_link_libraries(_nanobound PRIVATE tvbk)
