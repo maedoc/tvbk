@@ -27,7 +27,7 @@ wheel.py-api = "cp312"
 
 [tool.cibuildwheel]
 build-verbosity = 1
-test-command = "pytest {project}"
+test-command = "cd {project}/tests; pytest"
 test-requires = "pytest"
 skip = ["pp*"] # don't build pypy wheels
 archs = ["auto"]
