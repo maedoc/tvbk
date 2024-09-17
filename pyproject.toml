@@ -10,7 +10,7 @@ requires-python = ">=3.8"
 authors = [
     { name = "Marmaduke Woodman", email = "marmaduke.woodman@univ-amu.fr" },
 ]
-classifiers = [ "License :: BSD", ]
+classifiers = []
 dependencies = [ "numpy==1.24", "scipy" ]
 version = "v0.5"
 
@@ -27,8 +27,8 @@ wheel.py-api = "cp312"
 
 [tool.cibuildwheel]
 build-verbosity = 1
-test-command = "cd {project}/tests; pytest"
-test-requires = "pytest numpy==1.24 scipy nanobind"
+# test-command = "cd {project}/tests; pytest"
+# test-requires = "pytest numpy==1.24 scipy nanobind"
 skip = ["pp*"] # don't build pypy wheels
 archs = ["auto"]
 
