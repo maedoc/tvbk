@@ -2,7 +2,7 @@ import numpy as np
 import scipy.sparse
 
 import tvb_kernels
-from tvb_kernels import tvbk
+from tvb_kernels import _nanobound as tvbk
 
 
 def rand_weights(seed=43, sparsity=0.4, dt=0.1, horizon=256, num_node=90):
