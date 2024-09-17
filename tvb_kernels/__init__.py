@@ -6,7 +6,10 @@ import ctypes
 import scipy.sparse
 
 # from . import _nanobound as tvbk
-import tvb_kernels._nanobound as tvbk
+try:
+    import tvb_kernels._nanobound as tvbk
+except ImportError:
+    pass
 
 
 class CxMode(enum.Enum):
