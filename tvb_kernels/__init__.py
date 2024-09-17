@@ -5,7 +5,8 @@ import ctypes
 # TODO mv functionality used to C
 import scipy.sparse
 
-from . import _nanobound as tvbk
+# from . import _nanobound as tvbk
+import tvb_kernels._nanobound as tvbk
 
 
 class CxMode(enum.Enum):
