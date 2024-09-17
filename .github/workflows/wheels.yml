@@ -15,8 +15,7 @@ jobs:
         with:
           name: dist-${{ matrix.os }}
           path: wheelhouse/*.whl
-      - run: pip install pytest
-      - run: pip install . && pytest
+      - run: pip3 install pytest && pip3 install . && pytest
         
   merge_wheels:
     name: merge wheels into single artifact
