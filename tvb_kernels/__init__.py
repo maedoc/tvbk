@@ -5,34 +5,7 @@ import ctypes
 # TODO mv functionality used to C
 import scipy.sparse
 
-# ctypesgen module
-import tvbk
-
-__version__ = 'v0.4'
-
-
-def _to_ct(a):
-    val_type = {
-        'float32': ctypes.c_float,
-        'uint32': ctypes.c_uint32,
-        'int32': ctypes.c_int32
-    }[a.dtype.name]
-    return a.ctypes.data_as(ctypes.POINTER(val_type))
-
-
-def mm8_ref(A, B, C):
-    b = np.zeros(0, 'f')
-    tvbk.tvbk_mm8_ref(_to_ct(A), _to_ct(B), _to_ct(C), _to_ct(b))
-
-
-def mm8_fast(A, B, C):
-    b = np.zeros(0, 'f')
-    tvbk.tvbk_mm8_fast(_to_ct(A), _to_ct(B), _to_ct(C), _to_ct(b))
-    
-
-def randn(out, seed=42):
-    tvbk.tvbk_randn(
-        np.uint32(seed), np.uint32(out.size), _to_ct(out))
+from . import _nanobound as tvbk
 
 
 class CxMode(enum.Enum):

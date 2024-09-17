@@ -20,7 +20,17 @@ which will then be used internally by TVB.
 No stable versions are available, so users can install from
 source with `pip install .` or to just get a wheel `pip wheel .`
 
-For dev w/ editor using clangd, do
+## dev
+
+for best experience
+```
+apt-get/brew install clangd clang-tidy
+pip install -U pip
+pip install -U python-lsp-server[all] cmake-language-server nanobind scikit-build-core[pyproject]
+pip install --no-build-isolation -Ceditable.rebuild=true -ve .
+```
+
+for the plain makefile workflow,
 ```
 bear -- make -B test
 ```
