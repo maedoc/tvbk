@@ -23,7 +23,6 @@ find_package(nanobind CONFIG REQUIRED)
 nanobind_add_module(_nanobound STABLE_ABI src/nanobound.cpp
   src/conn.c src/r123.cpp src/matmul.c src/ode.c src/ops.c )
 
-target_link_libraries(_nanobound PRIVATE tvbk)
 install(TARGETS _nanobound LIBRARY DESTINATION tvb_kernels)
 
 # nanobind_add_stub(
