@@ -11,7 +11,7 @@ authors = [
     { name = "Marmaduke Woodman", email = "marmaduke.woodman@univ-amu.fr" },
 ]
 classifiers = [ "License :: BSD", ]
-dependencies = [ "numpy", "scipy" ]
+dependencies = [ "numpy==1.24", "scipy==1.14.1" ]
 version = "v0.5"
 
 [project.urls]
@@ -28,7 +28,7 @@ wheel.py-api = "cp312"
 [tool.cibuildwheel]
 build-verbosity = 1
 test-command = "cd {project}/tests; pytest"
-test-requires = "pytest"
+test-requires = "pytest numpy==1.24 scipy==1.14.1"
 skip = ["pp*"] # don't build pypy wheels
 archs = ["auto"]
 
