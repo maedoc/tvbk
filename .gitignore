@@ -11,4 +11,4 @@ env
 .cache
 *.db
 _output
-wheelhouse
+wheelhousecompile_commands.json

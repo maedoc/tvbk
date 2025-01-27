@@ -172,12 +172,26 @@ NB_MODULE(tvbk_ext, m) {
     }, "dx"_a, "x"_a, "c"_a, "p"_a);
 
   m.def("dfun_mpr8",
-    [](farr<nb::shape<tvbk::mpr::num_svar,8>> &dx,
-       farr<nb::shape<tvbk::mpr::num_svar,8>> &x,
-       farr<nb::shape<tvbk::mpr::num_cvar,8>> &c,
-       farr<nb::shape<tvbk::mpr::num_parm,8>> &p)
+    [](farr<nb::shape<tvbk::mpr::num_svar,8>> &_dx,
+       farr<nb::shape<tvbk::mpr::num_svar,8>> &_x,
+       farr<nb::shape<tvbk::mpr::num_cvar,8>> &_c,
+       farr<nb::shape<tvbk::mpr::num_parm,8>> &_p)
     {  
-      tvbk::mpr::dfun<8>((float *)dx.data(), (float *)x.data(), (float *)c.data(), (float *)p.data());
+      float *xp = (float*) _x.data();
+      for (int i=0; i<16; i++) printf("%0.3f ", xp[i]);
+      printf("\n");
+      tvbk::mpr::svar<8> dx, x(xp);
+      printf("c\n");
+      tvbk::mpr::cvar<8> c((float *)_c.data());
+      printf("p\n");
+      tvbk::mpr::parm<8> p((float *)_p.data());
+      printf("x dump\n");
+      x.dump();
+      printf("xd dump\n");
+      dx.dump();
+      tvbk::mpr::dfun<8>(dx, x, c, p);
+      dx.copy_out((float *)_dx.data());
+      dx.dump();
     }, "dx"_a, "x"_a, "c"_a, "p"_a);
 
   decl_step<tvbk::jr>(m);

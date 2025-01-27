@@ -119,11 +119,40 @@ struct conn {
 #define NUM_ARGS(...) _NUM_ARGS(__VA_ARGS__, 100, 99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
 
 template <typename T> struct block {
-    block() { }
-    block(float *src) {
-        for (int i=0; i<T::numel; i++)
-            static_cast<T*>(this)->flat[i] = src[i];
+  block() {
+    for (int i = 0; i < T::numel; i++)
+      static_cast<T *>(this)->flat[i] = 0.f;
+  }
+  block(float *src) { copy_in(src); }
+  block(const float *src) { copy_in(src); }
+  float operator[](int i) const {
+    return const_cast<T *>(static_cast<const T *>(this))->flat[i];
+  }
+  void copy_in(const float *src) {
+    for (int i = 0; i < T::numel; i++)
+    {
+      static_cast<T *>(this)->flat[i] = src[i];
+      printf("[copy_in %d] %0.3f <- %0.3f\n", i,
+        static_cast<T *>(this)->flat[i] , src[i] );
     }
+  }
+  void dump(float *p) {
+    printf("[block of %dx%d]\n", T::length, T::width);
+    for (int i=0; i<T::length; i++)
+    {
+      printf("\t[%d] ", i);
+      for (int j = 0; j < T::width; j++)
+        printf("%0.3f ", p[i*T::width + j]);
+      printf("\n");
+    }
+    printf("\n");
+  }
+  void dump() { dump(static_cast<T *>(this)->flat); }
+  void copy_out(float *dst) {
+    for (int i = 0; i < T::numel; i++)
+      dst[i] = static_cast<T *>(this)->flat[i];
+  }
+  operator float *() { return static_cast<T *>(this)->flat; }
 };
 
 #define defblock(blkname, _names...)  \
@@ -138,6 +167,7 @@ template <int w=8> struct blkname : block<blkname<w>> \
         parm_t _names; \
     }; \
     using block<blkname<w>>::block; \
+    using block<blkname<w>>::operator[]; \
 }
 
 /*
@@ -419,6 +449,8 @@ struct jr {
   // with width=8 & -O3 -mavx2 -fveclib=libmvec -ffast-math & __restrict inputs,
   // clang generates straight asm no jumps
   // gcc also good, but drop -fveclib=libmvec
+  defblock(svar, y0, y1, y2, y3, y4, y5);
+  defblock(parm, A,B,a,b,v0,nu_max,r,J,a_1,a_2,a_3,a_4,mu,I);
   template <int width>
   INLINE static void
   dfun(float *__restrict dx, const float *__restrict x, const float *__restrict c, const float *__restrict p)
@@ -444,29 +476,37 @@ struct jr {
 };
 
 struct mpr {
-  static const uint32_t num_svar=2, num_parm=6, num_cvar=1;
-  static constexpr const char * const parms = "tau I Delta J eta cr", * const name = "mpr";
-  static constexpr const float default_parms[6] = {1.0, 0.0, 1.0, 15.0, -5.0, 1.0};
-  template <int width>
-  INLINE static void
-  dfun(float *__restrict dx, const float *__restrict x, const float *__restrict c, const float *__restrict p)
-  {
-    #pragma omp simd
-    for (int i=0; i<width; i++) {
-      float r=x[i+0*width],V=x[i+1*width];
-      float tau=p[i+0*width],I=p[i+1*width],Delta=p[i+2*width],J=p[i+3*width],eta=p[i+4*width],cr=p[i+5*width];
-      r = r * (r > 0);
-      dx[i+0*width] = (1 / tau) * (Delta / (M_PI_F * tau) + 2.0f * r * V);
-      dx[i+1*width] = (1 / tau) * (V * V + eta + J * tau * r + I + cr * c[i] - (M_PI_F * M_PI_F) * (r * r) * (tau * tau));
+  static const uint32_t num_svar = 2, num_parm = 6, num_cvar = 1;
+  static constexpr const char *const parms = "tau I Delta J eta cr",
+                                     *const name = "mpr";
+  static constexpr const float default_parms[6] = {1.0,  0.0,  1.0,
+                                                   15.0, -5.0, 1.0};
+  defblock(svar, r, V);
+  defblock(cvar, r);
+  defblock(parm, tau, I, Delta, J, eta, cr);
+  template <int w>
+  INLINE static void dfun(svar<w>& dx, const svar<w> x, const cvar<w> c, const parm<w> p) {
+    adhoc(x);
+#pragma omp simd
+    for (int i = 0; i < w; i++) {
+      float tau = p[i + 0 * w], I = p[i + 1 * w], Delta = p[i + 2 * w],
+            J = p[i + 3 * w], eta = p[i + 4 * w], cr = p[i + 5 * w];
+      float dr = (1 / tau) * (Delta / (M_PI_F * tau) + 2.0f * x.r[i] * x.V[i]);
+      float dV = (1 / tau) * (x.V[i] * x.V[i] + eta + J * tau * x.r[i] + I + cr * c.r[i] -
+                             (M_PI_F * M_PI_F) * (x.r[i] * x.r[i]) * (tau * tau));
+      dx.r[i] = dr;
+      dx.V[i] = dV;
+      printf("[dfun %d] r=%0.3f V=%0.3f -> dr=%0.3f dV=%0.3f dr=%0.3f dV=%0.3f\n", i, x.r[i], x.V[i], dr, dV, dx.r[i], dx.V[i]);
     }
   }
-  template <int width> INLINE static void adhoc(float *x) {
-    #pragma omp simd
-    for (int i=0; i<width; i++) {
-      x[i] = x[i] * (x[i] > 0);
+  template <int w> INLINE static void adhoc(svar<w> x) {
+#pragma omp simd
+    for (int i = 0; i < w; i++) {
+      x.r[i] = x.r[i] * (x.r[i] > 0);
     }
   }
 };
+
 /*
                       I8                                                I8           
                       I8                                                I8           
@@ -495,16 +535,13 @@ static void heun_step(
 {
   constexpr uint8_t nsvar = model::num_svar;
   const uint32_t num_node = cx.num_node, horizon = cx.num_time;
-  float x[nsvar*width], xi[nsvar*width]={}, dx1[nsvar*width]={}, dx2[nsvar*width]={};
+  // float x[nsvar*width], xi[nsvar*width]={}, dx1[nsvar*width]={}, dx2[nsvar*width]={};
+  typename model::template svar<width> x, xi, dx1, dx2;
 
   // load states
 #pragma clang loop unroll(full)
-  for (int svar=0; svar < nsvar; svar++) {
-    load<width>(x+svar*width, states+width*(i_node + num_node*svar));
-    zero<width>(xi+svar*width);
-    zero<width>(dx1+svar*width);
-    zero<width>(dx2+svar*width);
-  }
+  for (int svar=0; svar < nsvar; svar++)
+    load<width>(&(x.flat[0])+svar*width, states+width*(i_node + num_node*svar));
 
   // Heun stage 1
   model::template dfun<width>(dx1, x, cx1, params);
@@ -526,7 +563,7 @@ static void heun_step(
   // update buffer
   // TODO move out, to handle multiple cvars/cx/conns
   int write_time = i_time & (cx.num_time - 1);
-  load<width>(cx.buf + width * (i_node * horizon + write_time),x);
+  load<width>(cx.buf + width * (i_node * horizon + write_time), x);
 }
 
 template <typename model, int width=8>
