@@ -96,3 +96,18 @@ def test_tvbk_perf(benchmark):
     sim = make_tvb_model(perf_time, perf_period)
     init_state = sim.current_state.copy()
     benchmark(lambda : tvbk_run_sim(sim, init_state))
+
+def test_kionex():
+    from tvb.simulator.models import KIonEx
+    model = KIonEx()
+    for i in range(1024):
+        dx = np.zeros((5, 8), 'f')
+        x = np.random.randn(*dx.shape).astype('f')/5 + np.c_[0.1, -50, 0.5, -5, -10].T
+        c = np.random.randn(1,8).astype('f')/2
+        p = np.tile(np.array(kionex_default_theta).astype('f'), (8, 1)).T.copy()
+        assert p.shape == (16, 8)
+        m.dfun_kionex8(dx, x, c, p)
+        # models imported from TVB expect a 3rd dim which can just be 1
+        dx_np = model.dfun(x[:,:,None], c[:,:,None], 0)[:,:,0]
+        np.testing.assert_allclose(dx, dx_np, 0.15, 0.1)
+
