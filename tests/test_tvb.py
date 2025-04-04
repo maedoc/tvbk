@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 import scipy.sparse
 
+import tvbk as m
 import tvb.simulator.lab as tvb
 import tvb.simulator.backend.nb_mpr as nb_mpr
 import tvbk
