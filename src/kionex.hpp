@@ -38,9 +38,9 @@ struct kionex {
       const float w_i = 2160.0f, w_o = 720.0f, Na_i0 = 16.0f, Na_o0 = 138.0f;
       const float K_i0 = 130.0f, K_o0 = 4.80f, Cl_i0 = 5.0f, Cl_o0 = 112.0f;
 
-      // Helper functions
-      auto m_inf = [](float V) { return 1.0f/(1.0f + expf((Cmna-V)/DCmna)); };
-      auto n_inf = [](float V) { return 1.0f/(1.0f + expf((Cnk-V)/DCnk)); };
+      // Helper functions - capture needed constants
+      auto m_inf = [Cmna,DCmna](float V) { return 1.0f/(1.0f + expf((Cmna-V)/DCmna)); };
+      auto n_inf = [Cnk,DCnk](float V) { return 1.0f/(1.0f + expf((Cnk-V)/DCnk)); };
       auto h = [](float n) { return 1.1f - 1.0f/(1.0f + expf(-8.0f * (n - 0.4f))); };
 
       // Compute intermediate values
