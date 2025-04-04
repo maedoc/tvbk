@@ -104,7 +104,23 @@ def test_kionex():
         dx = np.zeros((5, 8), 'f')
         x = np.random.randn(*dx.shape).astype('f')/5 + np.c_[0.1, -50, 0.5, -5, -10].T
         c = np.random.randn(1,8).astype('f')/2
-        p = np.tile(np.array(kionex_default_theta).astype('f'), (8, 1)).T.copy()
+        # Parameters in same order as kionex.hpp
+        p = np.array([
+            0.0,    # E
+            5.5,    # K_bath
+            0.1,    # J
+            0.0,    # eta
+            1.0,    # Delta
+            -40.0,  # c_minus
+            0.5,    # R_minus
+            -20.0,  # c_plus
+            -0.5,   # R_plus
+            -31.0,  # Vstar
+            1.0,    # Cm
+            4.0,    # tau_n
+            0.04,   # gamma
+            0.001   # epsilon
+        ], dtype='f').reshape(14, 1).repeat(8, axis=1)
         assert p.shape == (16, 8)
         m.dfun_kionex8(dx, x, c, p)
         # models imported from TVB expect a 3rd dim which can just be 1
