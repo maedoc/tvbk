@@ -8,7 +8,7 @@
 namespace tvbk {
 
 struct kionex {
-  static const uint32_t num_svar=5, num_parm=16, num_cvar=1;
+  static const uint32_t num_svar=5, num_parm=14, num_cvar=1;
   static constexpr const char *const parms = "E,K_bath,J,eta,Delta,c_minus,R_minus,c_plus,R_plus,Vstar,Cm,tau_n,gamma,epsilon";
   static constexpr const char *const name="kionex";
 
