@@ -12,6 +12,7 @@
 #include "net1.hpp"
 #include "net.hpp"
 #include "jr.hpp"
+#include "kionex.hpp"
 #include "mpr.hpp"
 #include "heun.hpp"
 #include "step.hpp"
