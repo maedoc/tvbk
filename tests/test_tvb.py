@@ -122,7 +122,7 @@ def test_kionex():
             0.04,   # gamma
             0.001   # epsilon
         ], dtype='f').reshape(14, 1).repeat(8, axis=1)
-        assert p.shape == (16, 8)
+        assert p.shape == (14, 8)
         m.dfun_kionex8(dx, x, c, p)
         # models imported from TVB expect a 3rd dim which can just be 1
         dx_np = model.dfun(x[:,:,None], c[:,:,None], 0)[:,:,0]
