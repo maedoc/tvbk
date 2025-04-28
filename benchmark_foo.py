@@ -21,27 +21,42 @@ def main():
     # Load the shared library
     lib = ctypes.CDLL('./foo.so')
     
+    # Define heun_work_t structure
+    class heun_work_t(ctypes.Structure):
+        _fields_ = [
+            ("n", ctypes.c_int),
+            ("dt", ctypes.c_float),
+            ("dx1", ctypes.POINTER(ctypes.c_float)),
+            ("dx2", ctypes.POINTER(ctypes.c_float)),
+            ("xi", ctypes.POINTER(ctypes.c_float)),
+            ("x", ctypes.POINTER(ctypes.c_float))
+        ]
+
     # Set up argument and return types
-    lib.tvbk_model_step32.argtypes = [np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS')]
-    lib.tvbk_model_step32.restype = None
+    lib.tvbk_heun_alloc.argtypes = [ctypes.c_int, ctypes.c_float]
+    lib.tvbk_heun_alloc.restype = ctypes.POINTER(heun_work_t)
     
-    lib.tvbk_model_stepn.argtypes = [
-        ctypes.c_int,
-        np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS')
-    ]
+    lib.tvbk_heun_free.argtypes = [ctypes.POINTER(heun_work_t)]
+    lib.tvbk_heun_free.restype = None
+    
+    lib.tvbk_model_stepn.argtypes = [ctypes.POINTER(heun_work_t)]
     lib.tvbk_model_stepn.restype = None
     
-    # Create test data
-    x32 = np.random.rand(32).astype(np.float32)
-    xn = np.random.rand(128).astype(np.float32)
+    # Create test data and work structs
+    n = 32
+    dt = 0.1
+    x = np.random.rand(n).astype(np.float32)
     
-    # Benchmark step32
-    ips32 = benchmark(lambda x: lib.tvbk_model_step32(x), x32)
-    print(f"tvbk_model_step32: {ips32:,.0f} iterations/second")
+    # Allocate work struct and set x pointer
+    work = lib.tvbk_heun_alloc(n, dt)
+    work.contents.x = x.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
     
-    # Benchmark stepn with n=32
-    ipsn = benchmark(lambda x: lib.tvbk_model_stepn(32, x), xn)
-    print(f"tvbk_model_stepn(n=32): {ipsn:,.0f} iterations/second")
+    # Benchmark
+    ips = benchmark(lambda _: lib.tvbk_model_stepn(work), None)
+    print(f"tvbk_model_stepn(n={n}): {ips:,.0f} iterations/second")
+    
+    # Clean up
+    lib.tvbk_heun_free(work)
 
 if __name__ == "__main__":
     main()
