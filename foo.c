@@ -12,10 +12,31 @@ INLINE static void dfun(int n, float *dx, float *x)
 }
 
 typedef struct heun_work {
-    const int n;
-    const float dt;
-    float *dx1, *dx2, *xi, *x;
+    int n;
+    float dt;
+    float *dx1;
+    float *dx2;
+    float *xi;
+    float *x;
 } heun_work_t;
+
+heun_work_t* tvbk_heun_alloc(int n, float dt) {
+    heun_work_t* w = malloc(sizeof(heun_work_t));
+    w->n = n;
+    w->dt = dt;
+    w->dx1 = malloc(n * sizeof(float));
+    w->dx2 = malloc(n * sizeof(float));
+    w->xi = malloc(n * sizeof(float));
+    w->x = NULL;
+    return w;
+}
+
+void tvbk_heun_free(heun_work_t* w) {
+    free(w->dx1);
+    free(w->dx2);
+    free(w->xi);
+    free(w);
+}
 
 INLINE static void heun_step(heun_work_t w) {
     dfun(w.n, w.dx1, w.x);
@@ -28,8 +49,6 @@ INLINE static void heun_step(heun_work_t w) {
         w.x[i] += w.dt*0.5*(w.dx1[i] + w.dx2[i]);
 }
 
-void tvbk_model_stepn(int n, float *x) {
-    float dx1[128], dx2[128], xi[128];
-    heun_work_t w = {.n = n, .dt=0.1, .dx1=dx1, .dx2=dx2, .xi=xi, .x=x};
-    heun_step(w);
+void tvbk_model_stepn(heun_work_t *w) {
+    heun_step(*w);
 }
