@@ -413,7 +413,7 @@ def dfun_kionex_np(ys, cs, p):
     I_K = (g_Kl + g_K * n) * (V - 26.64 * np.log(K_o/K_i))
     I_Na = (g_Nal + g_Na * m_inf(V) * h(n)) * (V - 26.64 * np.log(Na_o/Na_i))
     I_Cl = g_Cl * (V + 26.64 * np.log(Cl_o0/Cl_i0))
-    I_pump = rho * (1.0/(1.0 + np.exp((Cnap - Na_i)/DCnap) * 
+    I_pump = rho * (1.0/(1.0 + np.exp((Cnap - Na_i)/DCnap))) * \
                    (1.0/(1.0 + np.exp((Ckp - K_o)/DCkp)))
 
     Vdot = (-1.0/p.Cm) * (I_Na + I_K + I_Cl + I_pump)
