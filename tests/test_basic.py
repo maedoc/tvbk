@@ -374,7 +374,7 @@ def run_sim_np(dfun, num_svar, buf_init,
 # Helper class to hold KIonEx parameters
 KIonExTheta = collections.namedtuple(
     typename='KIonExTheta',
-    field_names='E,K_bath,J,eta,Delta,c_minus,R_minus,c_plus,R_plus,Vstar,Cm,tau_n,gamma,epsilon'.split(' '))
+    field_names='E,K_bath,J,eta,Delta,c_minus,R_minus,c_plus,R_plus,Vstar,Cm,tau_n,gamma,epsilon'.split(','))
 
 kionex_default_theta = KIonExTheta(
     E=0.0, K_bath=5.5, J=0.1, eta=0.0, Delta=1.0,
