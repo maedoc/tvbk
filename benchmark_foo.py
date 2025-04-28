@@ -2,7 +2,7 @@ import ctypes
 import time
 import numpy as np
 
-def benchmark(func, x, iterations=10000, warmup=100):
+def benchmark(func, x, iterations=100000, warmup=100):
     """Benchmark a function by running it multiple times."""
     # Warmup
     for _ in range(warmup):

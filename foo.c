@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <math.h>
 
 #define INLINE __attribute((always_inline)) inline
