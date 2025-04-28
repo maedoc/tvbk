@@ -419,13 +419,16 @@ def dfun_kionex_np(ys, cs, p):
     Vdot = (-1.0/p.Cm) * (I_Na + I_K + I_Cl + I_pump)
     r = p.R_minus * x / np.pi
 
-    # Compute derivatives
-    if V <= p.Vstar:
-        xdot = p.Delta + 2*p.R_minus*(V-p.c_minus)*x - p.J*r*x
-        Vdot = Vdot - p.R_minus*x**2 + p.eta + (p.R_minus/np.pi)*c*(p.E-V)
-    else:
-        xdot = p.Delta + 2*p.R_plus*(V-p.c_plus)*x - p.J*r*x
-        Vdot = Vdot - p.R_plus*x**2 + p.eta + (p.R_minus/np.pi)*c*(p.E-V)
+    # Compute derivatives using np.where for vectorized conditional logic
+    cond = V <= p.Vstar
+    
+    xdot_le = p.Delta + 2*p.R_minus*(V-p.c_minus)*x - p.J*r*x
+    xdot_gt = p.Delta + 2*p.R_plus*(V-p.c_plus)*x - p.J*r*x
+    xdot = np.where(cond, xdot_le, xdot_gt)
+
+    Vdot_mod_le = - p.R_minus*x**2 + p.eta + (p.R_minus/np.pi)*c*(p.E-V)
+    Vdot_mod_gt = - p.R_plus*x**2 + p.eta + (p.R_minus/np.pi)*c*(p.E-V) # Note: R_minus used in both cases for c term in original code
+    Vdot = Vdot + np.where(cond, Vdot_mod_le, Vdot_mod_gt)
 
     ndot = (ninf - n) / p.tau_n
     DKi_dot = -(p.gamma / w_i) * (I_K - 2.0 * I_pump)
