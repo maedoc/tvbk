@@ -439,7 +439,7 @@ def test_kionex8():
         x = np.random.randn(*dx.shape).astype('f')/5 + np.c_[0.1, -50, 0.5, -5, -10].T
         c = np.random.randn(1,8).astype('f')/2
         p = np.tile(np.array(kionex_default_theta).astype('f'), (8, 1)).T.copy()
-        assert p.shape == (16, 8)
+        assert p.shape == (14, 8)
         m.dfun_kionex8(dx, x, c, p)
         dx_np = dfun_kionex_np(x, c, KIonExTheta(*p))
         np.testing.assert_allclose(dx, dx_np, 0.15, 0.1)
