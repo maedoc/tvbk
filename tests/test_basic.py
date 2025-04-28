@@ -557,6 +557,7 @@ def test_step_mpr():
     pl.savefig('test_mpr2.jpg')
     """
 
+@pytest.mark.slow
 @pytest.mark.benchmark(group='sim_mpr')
 def test_perf_step_mpr_np(benchmark):
     cv = 1.0
@@ -621,6 +622,7 @@ def test_perf_step_mpr_np(benchmark):
     benchmark(run1)
 
 
+@pytest.mark.slow
 @pytest.mark.benchmark(group='sim_mpr')
 def test_perf_step_mpr_cpp(benchmark):
     cv = 1.0

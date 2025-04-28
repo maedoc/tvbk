@@ -24,3 +24,9 @@ jobs:
 
     - name: Test
       run: python -m pytest
+
+    - name: install & test tvb models
+      run: |
+        python -m pip install tvb-library
+        python -m pytest -m tvb
+
