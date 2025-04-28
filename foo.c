@@ -38,17 +38,17 @@ void tvbk_heun_free(heun_work_t* w) {
     free(w);
 }
 
-INLINE static void heun_step(heun_work_t w) {
-    dfun(w.n, w.dx1, w.x);
+INLINE static void heun_step(heun_work_t *w) {
+    dfun(w->n, w->dx1, w->x);
     #pragma omp simd
-    for (int i=0; i<w.n; i++)
-        w.xi[i] = w.x[i] + w.dt*w.dx1[i];
-    dfun(w.n, w.dx2, w.xi);
+    for (int i=0; i<w->n; i++)
+        w->xi[i] = w->x[i] + w->dt*w->dx1[i];
+    dfun(w->n, w->dx2, w->xi);
     #pragma omp simd
-    for (int i=0; i<w.n; i++)
-        w.x[i] += w.dt*0.5*(w.dx1[i] + w.dx2[i]);
+    for (int i=0; i<w->n; i++)
+        w->x[i] += w->dt*0.5*(w->dx1[i] + w->dx2[i]);
 }
 
 void tvbk_model_stepn(heun_work_t *w) {
-    heun_step(*w);
+    heun_step(w);
 }
