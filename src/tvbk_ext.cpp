@@ -207,7 +207,17 @@ NB_MODULE(tvbk_ext, m) {
       tvbk::kionex::dfun<8>((float *)dx.data(), (float *)x.data(), (float *)c.data(), (float *)p.data());
     }, "dx"_a, "x"_a, "c"_a, "p"_a);
 
+  m.def("dfun_kionex2_8",
+    [](farr<nb::shape<tvbk::kionex2::num_svar,8>> &dx,
+       farr<nb::shape<tvbk::kionex2::num_svar,8>> &x,
+       farr<nb::shape<tvbk::kionex2::num_cvar,8>> &c,
+       farr<nb::shape<tvbk::kionex2::num_parm,8>> &p)
+    {  
+      tvbk::kionex2::dfun<8>((float *)dx.data(), (float *)x.data(), (float *)c.data(), (float *)p.data());
+    }, "dx"_a, "x"_a, "c"_a, "p"_a);
+
   decl_step<tvbk::jr>(m);
   decl_step<tvbk::mpr>(m);
   decl_step<tvbk::kionex>(m);
+  decl_step<tvbk::kionex2>(m);
 }
