@@ -17,7 +17,7 @@ with open('pyproject.toml', 'w') as fd:
     fd.write(''.join(newlines))
 assert min >= 0
 
-os.system('git commit -m "bump version"')
+os.system('git commit -am "bump version"')
 os.system(f'git tag v{maj}.{min}')
 os.system(f'git push origin master')
 os.system(f'git push v{maj}.{min}')
