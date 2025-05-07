@@ -9,7 +9,8 @@ for line in project:
         _, v = line.split('=')
         v = eval(v)
         maj, min = [int(_) for _ in v.split('.')]
-        next = f'version = "{maj}.{min+1}"\n'
+        min += 1
+        next = f'version = "{maj}.{min}"\n'
         newlines.append(next)
     else:
         newlines.append(line)
