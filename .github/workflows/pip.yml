@@ -19,8 +19,14 @@ jobs:
 
     - name: Build and install
       run: |
-        python -m pip install pytest pytest-benchmark scipy
+        python -m pip install pytest pytest-benchmark scipy tvb-library
         pip install --verbose .
 
     - name: Test
       run: python -m pytest
+
+    - name: install & test tvb models
+      run: |
+        python -m pip install tvb-library
+        python -m pytest -m tvb
+

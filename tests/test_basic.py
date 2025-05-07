@@ -371,6 +371,82 @@ def run_sim_np(dfun, num_svar, buf_init,
     return trace
 
 
+# Helper class to hold KIonEx parameters
+KIonExTheta = collections.namedtuple(
+    typename='KIonExTheta',
+    field_names='E,K_bath,J,eta,Delta,c_minus,R_minus,c_plus,R_plus,Vstar,Cm,tau_n,gamma,epsilon'.split(','))
+
+kionex_default_theta = KIonExTheta(
+    E=0.0, K_bath=5.5, J=0.1, eta=0.0, Delta=1.0,
+    c_minus=-40.0, R_minus=0.5, c_plus=-20.0, R_plus=-0.5, Vstar=-31.0,
+    Cm=1.0, tau_n=4.0, gamma=0.04, epsilon=0.001
+)
+
+def dfun_kionex_np(ys, cs, p):
+    x, V, n, DKi, Kg = ys
+    c, = cs
+    
+    # Constants from Python implementation
+    Cnap = 21.0; DCnap = 2.0; Ckp = 5.5; DCkp = 1.0
+    Cmna = -24.0; DCmna = 12.0; Chn = 0.4; DChn = -8.0
+    Cnk = -19.0; DCnk = 18.0; g_Cl = 7.5; g_Na = 40.0
+    g_K = 22.0; g_Nal = 0.02; g_Kl = 0.12; rho = 250.0
+    w_i = 2160.0; w_o = 720.0; Na_i0 = 16.0; Na_o0 = 138.0
+    K_i0 = 130.0; K_o0 = 4.80; Cl_i0 = 5.0; Cl_o0 = 112.0
+
+    # Helper functions
+    def m_inf(V): return 1.0/(1.0 + np.exp((Cmna-V)/DCmna))
+    def n_inf(V): return 1.0/(1.0 + np.exp((Cnk-V)/DCnk))
+    def h(n): return 1.1 - 1.0/(1.0 + np.exp(-8.0 * (n - 0.4)))
+
+    # Compute intermediate values
+    beta = w_i / w_o
+    DNa_i = -DKi
+    DNa_o = -beta * DNa_i
+    DK_o = -beta * DKi
+    K_i = K_i0 + DKi
+    Na_i = Na_i0 + DNa_i
+    Na_o = Na_o0 + DNa_o
+    K_o = K_o0 + DK_o + Kg
+
+    ninf = n_inf(V)
+    I_K = (g_Kl + g_K * n) * (V - 26.64 * np.log(K_o/K_i))
+    I_Na = (g_Nal + g_Na * m_inf(V) * h(n)) * (V - 26.64 * np.log(Na_o/Na_i))
+    I_Cl = g_Cl * (V + 26.64 * np.log(Cl_o0/Cl_i0))
+    I_pump = rho * (1.0/(1.0 + np.exp((Cnap - Na_i)/DCnap))) * \
+                   (1.0/(1.0 + np.exp((Ckp - K_o)/DCkp)))
+
+    Vdot = (-1.0/p.Cm) * (I_Na + I_K + I_Cl + I_pump)
+    r = p.R_minus * x / np.pi
+
+    # Compute derivatives using np.where for vectorized conditional logic
+    cond = V <= p.Vstar
+    
+    xdot_le = p.Delta + 2*p.R_minus*(V-p.c_minus)*x - p.J*r*x
+    xdot_gt = p.Delta + 2*p.R_plus*(V-p.c_plus)*x - p.J*r*x
+    xdot = np.where(cond, xdot_le, xdot_gt)
+
+    Vdot_mod_le = - p.R_minus*x**2 + p.eta + (p.R_minus/np.pi)*c*(p.E-V)
+    Vdot_mod_gt = - p.R_plus*x**2 + p.eta + (p.R_minus/np.pi)*c*(p.E-V) # Note: R_minus used in both cases for c term in original code
+    Vdot = Vdot + np.where(cond, Vdot_mod_le, Vdot_mod_gt)
+
+    ndot = (ninf - n) / p.tau_n
+    DKi_dot = -(p.gamma / w_i) * (I_K - 2.0 * I_pump)
+    Kg_dot = p.epsilon * (p.K_bath - K_o)
+
+    return np.array([xdot, Vdot, ndot, DKi_dot, Kg_dot])
+
+def test_kionex8():
+    for i in range(1024):
+        dx = np.zeros((5, 8), 'f')
+        x = np.random.randn(*dx.shape).astype('f')/5 + np.c_[0.1, -50, 0.5, -5, -10].T
+        c = np.random.randn(1,8).astype('f')/2
+        p = np.tile(np.array(kionex_default_theta).astype('f'), (8, 1)).T.copy()
+        assert p.shape == (14, 8)
+        m.dfun_kionex8(dx, x, c, p)
+        dx_np = dfun_kionex_np(x, c, KIonExTheta(*p))
+        np.testing.assert_allclose(dx, dx_np, 0.15, 0.1)
+
 def test_step_mpr():
     cv = 1.0
     dt = 0.01
@@ -481,6 +557,7 @@ def test_step_mpr():
     pl.savefig('test_mpr2.jpg')
     """
 
+@pytest.mark.slow
 @pytest.mark.benchmark(group='sim_mpr')
 def test_perf_step_mpr_np(benchmark):
     cv = 1.0
@@ -545,6 +622,7 @@ def test_perf_step_mpr_np(benchmark):
     benchmark(run1)
 
 
+@pytest.mark.slow
 @pytest.mark.benchmark(group='sim_mpr')
 def test_perf_step_mpr_cpp(benchmark):
     cv = 1.0
