@@ -12,3 +12,4 @@ env
 *.db
 _output
 wheelhouse
+.aider*
