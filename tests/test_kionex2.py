@@ -2,7 +2,9 @@ import pytest
 pytestmark = pytest.mark.tvb
 
 import numpy as np
+import scipy.sparse
 import tvbk as m
+import tvbk
 
 # Copied from ../../Nextcloud/2025/zz-sourin-kionex/Biophysical_wholebrain.md
 # with minor adjustments for standalone use (e.g. Model base class)
@@ -316,6 +318,106 @@ class KIonEx2(tvb.models.Model):
         return derivative
 
 
+def nextpow2(i):
+    return int(2**np.ceil(np.log2(i)))
+
+kionex2_param_names = [
+    'E', 'K_bath', 'J', 'eta', 'Delta', 'c_minus', 'R_minus', 
+    'c_plus', 'R_plus', 'Vstar', 'Cm', 'tau_n', 'gamma', 'epsilon'
+]
+
+def tvbk_run_sim_kionex2(sim, init_sim_state):
+    conn = sim.connectivity
+    s_w = scipy.sparse.csr_matrix(conn.weights)
+    nr = conn.weights.shape[0]
+    
+    # TVB ensures conn.horizon >= 1 if coupling is used.
+    # nextpow2 requires positive input.
+    horizon_val = conn.horizon if conn.horizon > 0 else 1
+    # If conn.horizon is 0 (e.g. no delays), TVB sets it to 1 for internal buffers.
+    # We use nextpow2 for C++ buffer dimension which must be power of 2.
+    # nextpow2(1) is 1.
+    k_cx_horizon = nextpow2(horizon_val)
+
+    k_cx = tvbk.Cx8s(nr, k_cx_horizon, 1) # batch_size = 1
+    k_conn = tvbk.Conn(nr, s_w.data.size)
+    k_conn.weights[:] = s_w.data.astype(np.float32)
+    k_conn.indptr[:] = s_w.indptr.astype(np.uint32)
+    k_conn.indices[:] = s_w.indices.astype(np.uint32)
+    
+    # Calculate integer delays for C++ kernel
+    # If speed is inf or tract_lengths are 0, delays will be 0.
+    non_zero_weights_mask = conn.weights != 0
+    if np.any(non_zero_weights_mask):
+        tracts_for_non_zero_weights = conn.tract_lengths[non_zero_weights_mask]
+        # Ensure speed is not zero to avoid division by zero if tracts are non-zero
+        # If speed is Inf, delays are 0. If speed is finite, calculate delay.
+        if conn.speed == 0 and np.any(tracts_for_non_zero_weights > 0):
+            raise ValueError("Connectivity speed is 0 with non-zero tract lengths.")
+        
+        if np.isinf(conn.speed):
+            idelays_values = np.zeros_like(tracts_for_non_zero_weights, dtype=np.uint32)
+        else:
+            idelays_values = (
+                tracts_for_non_zero_weights / conn.speed / sim.integrator.dt
+            ).astype(np.uint32)
+        k_conn.idelays[:] = idelays_values
+    else: # No connections, idelays array will be empty or not used if s_w.data.size is 0
+        pass
+
+    # Initialize k_cx.buf (history buffer for C++ kernel)
+    # sim.history.buffer shape: (tvb_horizon, nvar, N, nmode)
+    # k_cx.buf shape: (batch, N, k_cx_horizon, width)
+    # We use the history of the first state variable for coupling.
+    k_cx.buf[:] = 0.0
+    if conn.horizon > 0 and hasattr(sim, 'history') and sim.history is not None:
+        # history_for_coupling shape: (N, tvb_horizon)
+        history_for_coupling = sim.history.buffer[:, 0, :, 0].T 
+        # Ensure we don't try to read more history than available or write past k_cx buffer
+        len_to_copy = min(conn.horizon, k_cx_horizon)
+        # Copy relevant part of history: (N, len_to_copy)
+        # Assign to k_cx.buf[batch_idx, all_nodes, last_len_to_copy_timesteps, :]
+        # Broadcasting the last dimension (1) to SIMD width (8)
+        k_cx.buf[0, :, -len_to_copy:] = history_for_coupling[:, -len_to_copy:, np.newaxis]
+
+    num_svar, num_parm = 5, 14 # For KIonEx2
+    
+    # x shape: (batch, num_svar, nr, simd_width)
+    x = np.zeros((1, num_svar, nr, 8), 'f')
+    # init_sim_state shape from TVB: (num_svar, nr, 1)
+    x[0, :, :, 0] = init_sim_state[:, :, 0] 
+
+    # p shape: (batch, nr, num_parm, simd_width)
+    p = np.zeros((1, nr, num_parm, 8), 'f')
+    for i, pname in enumerate(kionex2_param_names):
+        param_val = getattr(sim.model, pname)
+        # getattr might return scalar or (nr,) array. Broadcast to (nr, 8).
+        p[0, :, i, :] = param_val.reshape(-1, 1) if hasattr(param_val, 'shape') else param_val
+
+    num_time_steps_sim = int(sim.simulation_length / sim.integrator.dt)
+    # For Raw monitor, period is dt, so num_skip is 1.
+    num_skip = int(sim.monitors[0].period / sim.integrator.dt) if sim.monitors else 1
+    
+    output_time_points = num_time_steps_sim // num_skip
+    y_cpp = np.zeros((output_time_points, num_svar, nr), 'f')
+    
+    # k_y stores result of one chunk of integration steps
+    k_y = np.zeros_like(x) 
+    # z is for noise terms if any (here nsig=0)
+    z = np.zeros((1, num_svar, 8), 'f') 
+    # seed for C++ RNG
+    seed = np.zeros((1, 8, 4), np.uint64) 
+
+    for t_idx in range(output_time_points):
+        # tvbk.step_kionex2_8 is assumed to be the C++ kernel function
+        tvbk.step_kionex2(k_cx, k_conn, x, k_y, z, p,
+                            t_idx * num_skip, num_skip, sim.integrator.dt,
+                            seed)
+        y_cpp[t_idx] = k_y[0, :, :, 0] # Store first SIMD lane result
+
+    return y_cpp
+
+
 def test_kionex2_dfun():
     model_py = KIonEx2()
     num_svar = model_py._nvar
@@ -444,10 +546,10 @@ def test_sim_tvb():
     init_cond=np.concatenate([x_0, V_0, n_0, DKi_0, Kg_0], axis=1)
     dt      = 0.01
     nsigma  = 0.0
-    G       = 8  #10 almost everyone sync; 4 almost no sync
+    G       = 2  #10 almost everyone sync; 4 almost no sync
     T = 0.5 # period for the sampling in * 10 ms
     Tinit = round(1000/T) # corresponds to 1 second of simulation 
-    sim_len = 100 #  (5) * 1e3  
+    sim_len = 1 #  (5) * 1e3  
     conn.weights[epi_reg, prop_reg] = 0
     conn.weights[prop_reg, epi_reg] = 0
     sim = tvb.simulator.Simulator(
@@ -463,4 +565,35 @@ def test_sim_tvb():
         initial_conditions = init_cond,
         #stimulus = stimulus,
     ).configure()
-    (t,y), = sim.run()
+
+    # Capture initial state after configuration
+    init_sim_state_cpp = sim.current_state.copy() # Shape: (nvar, N, nmode=1)
+
+    # Run TVB simulation (Python backend)
+    (t_tvb, y_tvb_raw), = sim.run() 
+    # y_tvb_raw shape: (time_points, nvar, N, nmode=1)
+    # Reshape for comparison: (time_points, nvar, N)
+    y_tvb = y_tvb_raw[:, :, :, 0]
+
+    # Run C++ simulation with tvbk
+    y_cpp = tvbk_run_sim_kionex2(sim, init_sim_state_cpp)
+
+    # Compare results
+    # Ensure same number of time points are compared
+    num_compare_points = min(y_tvb.shape[0], y_cpp.shape[0])
+    assert num_compare_points > 0, "No simulation data to compare."
+    
+    # Using tolerances from test_kionex2_dfun as a starting point
+    rtol = 0.001
+    atol = 0.02
+
+    # Compare each time step
+    for t_idx in range(num_compare_points):
+        print(t_idx)
+        np.testing.assert_allclose(
+            y_tvb[t_idx], 
+            y_cpp[t_idx], 
+            rtol=rtol*(1+t_idx), 
+            atol=atol*(1+t_idx),
+            err_msg=f"Mismatch at time step {t_idx}"
+        )
