@@ -43,7 +43,7 @@ jobs:
       with:
         submodules: true
 
-    - uses: pypa/cibuildwheel@v2.23
+    - uses: pypa/cibuildwheel@v3.0
       env:
         # skip lots of irrelevant stuff to keep gha fast
         CIBW_SKIP: 'pp* *i686 *win32 *musl* *universal2'
