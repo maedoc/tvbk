@@ -1,0 +1,124 @@
+syntax = "proto2";
+
+package foo_interpreter;
+
+// Represents a reference to a data buffer (like a float array) or a scalar variable.
+// In a real system, the name would be used to look up the actual data.
+message DataRef {
+  optional string name = 1;
+  // Optional: Add offset, size, type info if needed later
+}
+
+// --- Argument Messages for Operations ---
+
+message OpHaltArgs {}
+message OpLoopEndArgs {}
+message OpReturnArgs {}
+
+message OpLoopStartArgs {
+  optional uint64 count = 1; // Using uint64 for size_t equivalent
+}
+
+message OpBlockArgs {
+  optional InstructionSequence sequence = 1;
+}
+
+// Arguments for standard vector operations (binary and unary)
+message OpVec8Args {
+  optional DataRef dst_data = 1;
+  optional DataRef src1_data = 2;
+  optional DataRef src2_data = 3; // Only used for binary ops
+}
+
+message OpSheunpredArgs {
+  optional DataRef xi_data = 1;
+  optional DataRef x_data = 2;
+  optional DataRef dt_ref = 3;   // Reference to scalar dt
+  optional DataRef dx_data = 4;
+  optional DataRef z_data = 5;
+}
+
+message OpSheuncorrArgs {
+  optional DataRef nx_data = 1;
+  optional DataRef x_data = 2;
+  optional DataRef dt_ref = 3;   // Reference to scalar dt
+  optional DataRef dx1_data = 4;
+  optional DataRef dx2_data = 5;
+  optional DataRef z_data = 6;
+}
+
+message OpDotVec8Args {
+  optional DataRef x_data = 1;
+  optional DataRef y_data = 2;
+  optional DataRef result_ref = 3; // Reference to scalar result
+}
+
+message OpSumVec8Args { // Also used for OpMeanVec8
+  optional DataRef src1_data = 1;
+  optional DataRef result_ref = 2; // Reference to scalar result
+}
+
+message OpFillVec8Args {
+  optional DataRef dst_data = 1;
+  optional DataRef scalar_ref = 2; // Reference to scalar value to fill with
+}
+
+// Arguments for pointer increment. Targets an argument within another instruction.
+message OpPincArgs {
+  optional int32 target_instruction_index = 1; // Index within the current sequence/block
+  optional string target_argument_name = 2;    // e.g., "dst_data", "src1_data", "src2_data"
+  optional int32 increment_bytes = 3;
+}
+
+// Arguments for binary scalar operations (result stored in dst_ref)
+message OpScalarBinaryArgs {
+  optional DataRef dst_ref = 1; // Destination scalar reference (also first operand)
+  optional DataRef src_ref = 2; // Source scalar reference (second operand)
+}
+
+// Arguments for unary scalar operations (result stored in dst_ref)
+message OpScalarUnaryArgs {
+  optional DataRef dst_ref = 1; // Destination scalar reference
+  optional DataRef src_ref = 2; // Source scalar reference
+}
+
+
+// --- The Main Instruction Message ---
+
+message Instruction {
+  oneof op_args {
+    OpHaltArgs halt_args = 1;
+    OpLoopStartArgs loop_start_args = 2;
+    OpLoopEndArgs loop_end_args = 3;
+    OpBlockArgs block_args = 4;
+    OpReturnArgs return_args = 5;
+    OpVec8Args add_vec8_args = 6;
+    OpVec8Args mul_vec8_args = 7;
+    OpVec8Args exp_vec8_args = 8;
+    OpVec8Args sin_vec8_args = 9;
+    OpVec8Args cos_vec8_args = 10;
+    OpVec8Args sub_vec8_args = 11;
+    OpVec8Args div_vec8_args = 12;
+    OpVec8Args pow_vec8_args = 13;
+    OpSheunpredArgs sheunpred_vec8_args = 14;
+    OpSheuncorrArgs sheuncorr_vec8_args = 15;
+    OpDotVec8Args dot_vec8_args = 16;
+    OpVec8Args zero_vec8_args = 17; // Uses only dst_data
+    OpSumVec8Args sum_vec8_args = 18;
+    OpVec8Args sqrt_vec8_args = 19; // Uses dst_data, src1_data
+    OpFillVec8Args fill_vec8_args = 20;
+    OpVec8Args copy_vec8_args = 21; // Uses dst_data, src1_data
+    OpPincArgs pinc_args = 22;
+    OpSumVec8Args mean_vec8_args = 23; // Reuses OpSumVec8Args
+    OpScalarBinaryArgs div_scalar_args = 24;
+    OpScalarBinaryArgs sub_scalar_args = 25;
+    OpScalarBinaryArgs mul_scalar_args = 26;
+    OpScalarUnaryArgs sqrt_scalar_args = 27;
+    OpScalarUnaryArgs copy_scalar_args = 28;
+  }
+}
+
+// Represents a sequence of instructions, like a function body or a block
+message InstructionSequence {
+  repeated Instruction instructions = 1;
+}

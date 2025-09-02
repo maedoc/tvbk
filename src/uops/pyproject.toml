@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "uops_py"
+version = "0.1.0"
+authors = [
+  { name="Marmaduke Woodman", email="marmaduke.woodman@univ-amu.fr" },
+]
+description = "Python interface for the uops C library"
+readme = "README.md" # Optional: Add a README file later
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License", # Choose your license
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Developers",
+]
+dependencies = [
+    "numpy", "pytest", "pytest-benchmark"
+]
+
+[project.urls] # Optional
+"Homepage" = "https://github.com/maedoc/uops" # Example URL
+"Bug Tracker" = "https://github.com/maedoc/uops/issues" # Example URL
+
+[tool.setuptools.packages.find]
+where = ["."] # Look for packages in the root directory
+include = ["uops_py*"] # Include the uops_py package and its submodules (like tests)
+exclude = [] # No exclusions needed for now
+
+# Optional: If you want to include the compiled C library in the wheel,
+# you would add configuration here using `package_data` or `include_package_data`.
+# For now, we'll assume the library is found relative to the installed package
+# or in the system path.
+[tool.setuptools.package-data]
+"uops_py" = ["*.so", "*.dylib", "*.dll"] # Example: include shared libs next to __init__.py

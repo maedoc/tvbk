@@ -1,0 +1,137 @@
+name: build and upload
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: run cmake
+      # Configure CMake for Release build
+      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+    - name: build
+      # Build with Release configuration
+      run: cmake --build build --config Release
+
+    - name: test
+      # Test the Release build
+      run: ctest -C Release --rerun-failed --output-on-failure
+      working-directory: build
+
+    - name: Upload Linux artifact
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ runner.os }}-uops-lib
+        path: build/libuops.so # Adjust if library name/path differs
+
+    - name: Upload macOS artifact
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ runner.os }}-uops-lib
+        path: build/libuops.dylib # Adjust if library name/path differs
+
+    - name: Upload Windows artifact
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ runner.os }}-uops-lib
+        # MSVC typically places Release builds in a subdirectory
+        path: build/Release/uops.dll # Adjust if library name/path differs
+
+  test-python:
+    needs: build # Run after the build job completes for all OSes
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download library artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ runner.os }}-uops-lib
+        # Download to the root of the workspace
+        # The uops_interface.py should find the library here
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install Python dependencies
+      run: pip install numpy pytest pytest-benchmark
+
+    - name: Run Python tests
+      # Ensure tests run from the root where the library was downloaded
+      run: pytest
+
+  build-wheel:
+    needs: build # Depends on the completion of all matrix jobs in 'build'
+    runs-on: ubuntu-latest # Use a single OS to collect artifacts and build the wheel
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Create download directories
+      run: mkdir -p downloads/linux downloads/macos downloads/windows
+
+    - name: Download Linux artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: Linux-uops-lib
+        path: downloads/linux
+
+    - name: Download macOS artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: macOS-uops-lib
+        path: downloads/macos
+
+    - name: Download Windows artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: Windows-uops-lib
+        path: downloads/windows
+
+    - name: Create uops_py directory if it doesn't exist
+      run: mkdir -p uops_py
+
+    - name: Move libraries to uops_py directory
+      run: |
+        # Find and move the libraries, handling potential subdirectories
+        find downloads/linux -name '*.so' -exec mv {} uops_py/ \;
+        find downloads/macos -name '*.dylib' -exec mv {} uops_py/ \;
+        find downloads/windows -name '*.dll' -exec mv {} uops_py/ \;
+        echo "Contents of uops_py after moving libraries:"
+        ls -l uops_py
+
+    - name: Install build dependencies
+      run: pip install build
+
+    - name: Build wheel and source distribution
+      run: python -m build
+
+    - name: Upload Python package artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package
+        path: dist/ # Upload the generated wheel and sdist

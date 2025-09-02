@@ -1,0 +1,9 @@
+build
+.aider.*
+.cache
+__pycache__
+*.so
+dist
+buildlib
+*.egg-info
+.aider*
