@@ -7,7 +7,7 @@
 namespace tvbk {
 
 struct mpr {
-  static const uint32_t num_svar=2, num_parm=6, num_cvar=1;
+  static constexpr uint32_t num_svar=2, num_parm=6, num_cvar=1;
   static constexpr const char * const parms = "tau I Delta J eta cr", * const name = "mpr";
   static constexpr const float default_parms[6] = {1.0, 0.0, 1.0, 15.0, -5.0, 1.0};
   template <int width>

@@ -7,7 +7,7 @@
 namespace tvbk {
 
 struct jr {
-  static const uint32_t num_svar=6, num_parm=14, num_cvar=1;
+  static constexpr uint32_t num_svar=6, num_parm=14, num_cvar=1;
   static constexpr const char *const parms = "A,B,a,b,v0,nu_max,r,J,a_1,a_2,a_3,a_4,mu,I", *const name="jr";
   // with width=8 & -O3 -mavx2 -fveclib=libmvec -ffast-math & __restrict inputs,
   // clang generates straight asm no jumps
