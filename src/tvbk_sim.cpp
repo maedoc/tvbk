@@ -245,9 +245,18 @@ void run_simulation(const ConnData &conn_data, const ParamData &param_data,
     for (uint32_t i = 0; i < num_svar * num_nodes; i++) {
       output_data[chunk * num_svar * num_nodes + i] = tavg[i];
     }
+
+    // Progress bar
+    if (chunk % (num_outputs / 20 + 1) == 0 || chunk == num_outputs - 1) {
+      float progress = (float)(chunk + 1) / num_outputs;
+      int barWidth = 40;
+      std::cout << "\r[" << std::string(int(barWidth * progress), '=')
+                << std::string(barWidth - int(barWidth * progress), ' ') << "] "
+                << int(progress * 100.0) << "%" << std::flush;
+    }
   }
 
-  std::cout << "Simulation complete. Writing output..." << std::endl;
+  std::cout << "\nSimulation complete. Writing output..." << std::endl;
 
   // Write output
   write_csv_timeseries(output_file, output_data.data(), num_outputs, num_nodes,

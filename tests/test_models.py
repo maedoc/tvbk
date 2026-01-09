@@ -1,4 +1,5 @@
 import pytest
+pytest.importorskip("tvb")
 import numpy as np
 import tvbk as m
 import tvb.simulator.models.oscillator as osc

@@ -1,0 +1,91 @@
+name: Standalone CLI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - master
+    paths:
+      - 'src/tvbk_sim.cpp'
+      - 'src/*.hpp'
+      - 'cli/CMakeLists.txt'
+      - '.github/workflows/cli.yml'
+
+jobs:
+  build:
+    name: Build and Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: tvbk
+            asset_name: tvbk-linux-x64
+          - os: macos-latest
+            artifact_name: tvbk
+            asset_name: tvbk-macos-x64
+          - os: windows-latest
+            artifact_name: tvbk.exe
+            asset_name: tvbk-windows-x64.exe
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++
+
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install cmake
+
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+
+    - name: Build standalone CLI
+      run: |
+        cd cli
+        cmake -DCMAKE_BUILD_TYPE=Release .
+        cmake --build . --config Release
+
+    - name: Test help
+      run: |
+        cd cli
+        # Handle Windows path if necessary (MSVC puts it in Release/)
+        if [ -f "Release/${{ matrix.artifact_name }}" ]; then
+          mv Release/${{ matrix.artifact_name }} .
+        fi
+        ./${{ matrix.artifact_name }} --help
+      shell: bash
+
+    - name: Brief simulation test
+      run: |
+        cd cli
+        ./${{ matrix.artifact_name }} \
+          --model wilson_cowan \
+          --weights ../examples/simple_network/weights.csv \
+          --lengths ../examples/simple_network/lengths.csv \
+          --params ../examples/simple_network/params_wilson_cowan.csv \
+          --dt 0.1 \
+          --steps 100 \
+          --tavg-period 10 \
+          --output test_wc.csv
+        
+        echo "Checking for NaN/Inf values..."
+        ! grep -i "nan\|inf" test_wc.csv || exit 1
+      shell: bash
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.asset_name }}
+        path: cli/${{ matrix.artifact_name }}
+        if-no-files-found: error

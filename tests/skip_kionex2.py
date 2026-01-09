@@ -1,4 +1,5 @@
 import pytest
+pytest.importorskip("tvb")
 pytestmark = pytest.mark.tvb
 
 import numpy as np

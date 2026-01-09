@@ -48,6 +48,7 @@ jobs:
         # skip lots of irrelevant stuff to keep gha fast
         # also skip Python 3.8 as nanobind no longer supports it
         CIBW_SKIP: 'pp* *i686 *win32 *musl* *universal2 cp38-*'
+        CIBW_TEST_REQUIRES: pytest pytest-benchmark numpy scipy tvb-library
     
     - name: Verify clean directory
       run: git diff --exit-code
