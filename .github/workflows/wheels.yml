@@ -46,7 +46,8 @@ jobs:
     - uses: pypa/cibuildwheel@v2.23
       env:
         # skip lots of irrelevant stuff to keep gha fast
-        CIBW_SKIP: 'pp* *i686 *win32 *musl* *universal2'
+        # also skip Python 3.8 as nanobind no longer supports it
+        CIBW_SKIP: 'pp* *i686 *win32 *musl* *universal2 cp38-*'
     
     - name: Verify clean directory
       run: git diff --exit-code
