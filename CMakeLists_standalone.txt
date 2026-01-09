@@ -1,0 +1,35 @@
+cmake_minimum_required(VERSION 3.15)
+
+project(tvbk_sim LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Add the standalone executable
+add_executable(tvbk_sim src/tvbk_sim.cpp)
+
+# Include directories
+target_include_directories(tvbk_sim PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+# Compiler flags
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  target_compile_options(tvbk_sim PRIVATE -O3 -Wall -Wextra)
+  
+  # Optional: Enable OpenMP for parallel execution
+  find_package(OpenMP)
+  if(OpenMP_CXX_FOUND)
+    target_link_libraries(tvbk_sim PUBLIC OpenMP::OpenMP_CXX)
+    message(STATUS "OpenMP found and enabled")
+  endif()
+  
+  # Optional: Enable native optimizations (comment out for portable builds)
+  # target_compile_options(tvbk_sim PRIVATE -march=native -ffast-math)
+endif()
+
+if(MSVC)
+  target_compile_options(tvbk_sim PRIVATE /O2 /W4)
+endif()
+
+# Installation
+install(TARGETS tvbk_sim DESTINATION bin)

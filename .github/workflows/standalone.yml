@@ -1,0 +1,142 @@
+name: Standalone CLI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - master
+    paths:
+      - 'src/tvbk_sim.cpp'
+      - 'src/*.hpp'
+      - 'standalone/CMakeLists.txt'
+      - '.github/workflows/standalone.yml'
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: tvbk_sim
+            asset_name: tvbk_sim-linux-x64
+          - os: macos-latest
+            artifact_name: tvbk_sim
+            asset_name: tvbk_sim-macos-x64
+          - os: windows-latest
+            artifact_name: tvbk_sim.exe
+            asset_name: tvbk_sim-windows-x64.exe
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++
+
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install cmake
+
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+
+    - name: Build standalone CLI
+      run: |
+        cd standalone
+        cmake -DCMAKE_BUILD_TYPE=Release .
+        cmake --build . --config Release
+
+    - name: Test executable
+      run: |
+        cd standalone
+        ./${{ matrix.artifact_name }} --help
+      shell: bash
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.asset_name }}
+        path: standalone/${{ matrix.artifact_name }}
+        if-no-files-found: error
+
+  test:
+    name: Test CLI with examples
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: tvbk_sim-linux-x64
+        path: standalone/
+
+    - name: Make executable
+      run: chmod +x standalone/tvbk_sim
+
+    - name: Test Wilson-Cowan
+      run: |
+        ./standalone/tvbk_sim \
+          --model wilson_cowan \
+          --weights examples/simple_network/weights.csv \
+          --lengths examples/simple_network/lengths.csv \
+          --params examples/simple_network/params_wilson_cowan.csv \
+          --dt 0.1 \
+          --steps 100 \
+          --tavg-period 10 \
+          --output test_wc.csv
+
+    - name: Test Kuramoto
+      run: |
+        ./standalone/tvbk_sim \
+          --model kuramoto \
+          --weights examples/simple_network/weights.csv \
+          --params examples/simple_network/params_kuramoto.csv \
+          --dt 0.01 \
+          --steps 500 \
+          --tavg-period 50 \
+          --output test_kuramoto.csv
+
+    - name: Test Reduced Wong-Wang
+      run: |
+        ./standalone/tvbk_sim \
+          --model reduced_wong_wang \
+          --weights examples/simple_network/weights.csv \
+          --params examples/simple_network/params_reduced_wong_wang.csv \
+          --dt 0.1 \
+          --steps 200 \
+          --tavg-period 20 \
+          --output test_rww.csv
+
+    - name: Verify outputs
+      run: |
+        echo "Checking output files..."
+        test -f test_wc.csv || exit 1
+        test -f test_kuramoto.csv || exit 1
+        test -f test_rww.csv || exit 1
+        echo "All output files created successfully"
+        
+        echo "Checking file sizes..."
+        wc -l test_*.csv
+        
+        echo "Checking for NaN/Inf values..."
+        ! grep -i "nan\|inf" test_*.csv || exit 1
+        echo "All tests passed!"
+
+    - name: Upload test outputs
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-outputs
+        path: test_*.csv
