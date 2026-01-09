@@ -40,6 +40,7 @@ nanobind_add_module(
   tvbk_ext
   STABLE_ABI NB_STATIC LTO NOMINSIZE
   src/tvbk_ext.cpp
+  src/tvbk_jax.cpp
 )
 
 # causes wheel builds to fail, enable by user

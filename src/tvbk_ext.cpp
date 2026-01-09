@@ -29,6 +29,10 @@ template <typename shape>
 using farr =
     nb::ndarray<float, nb::numpy, nb::device::cpu, shape, nb::c_contig>;
 
+extern "C" void coupling_kernel_cpu(void *out, const void **in);
+
+extern "C" void coupling_batch_kernel_cpu(void *out, const void **in);
+
 // boilerplate for declaring a model stepping function
 template <typename model, typename M, int width = 8> void decl_step(M m) {
   char name[64];
@@ -679,4 +683,12 @@ NB_MODULE(tvbk_ext, m) {
                                      (float *)c.data(), (float *)p.data());
       },
       "dx"_a, "x"_a, "c"_a, "p"_a);
+  m.def("registrations", []() {
+    nb::dict dict;
+    dict["coupling_kernel_cpu"] =
+        nb::capsule((void *)coupling_kernel_cpu, "xla._CUSTOM_CALL_TARGET");
+    dict["coupling_batch_kernel_cpu"] = nb::capsule(
+        (void *)coupling_batch_kernel_cpu, "xla._CUSTOM_CALL_TARGET");
+    return dict;
+  });
 }
