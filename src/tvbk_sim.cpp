@@ -2,6 +2,7 @@
 
 #include "tvbk.hpp"
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -15,7 +16,21 @@
 
 using namespace tvbk;
 
-// CSV parsing utilities
+std::vector<std::string> split_string(const std::string &s, char delimiter) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream tokenStream(s);
+  while (std::getline(tokenStream, token, delimiter)) {
+    // Trim whitespace
+    token.erase(0, token.find_first_not_of(" \t\n\r"));
+    token.erase(token.find_last_not_of(" \t\n\r") + 1);
+    if (!token.empty()) {
+      tokens.push_back(token);
+    }
+  }
+  return tokens;
+}
+
 std::vector<std::vector<float>> read_csv_matrix(const std::string &filename) {
   std::vector<std::vector<float>> matrix;
   std::ifstream file(filename);
@@ -199,8 +214,33 @@ void run_simulation(const ConnData &conn_data, const ParamData &param_data,
   std::vector<float> params(num_parm * num_nodes * width);
   bool p_varies_node = param_data.values.size() > 1;
 
+  // Map parameter names to CSV columns
+  std::vector<std::string> model_param_names = split_string(Model::parms, ',');
+  if (model_param_names.size() != num_parm) {
+    std::cerr << "Error: Model reports " << num_parm
+              << " parameters but parms string has " << model_param_names.size()
+              << " names" << std::endl;
+    exit(1);
+  }
+
+  std::vector<int> col_map(num_parm, -1);
+  for (uint32_t i = 0; i < num_parm; i++) {
+    const std::string &name = model_param_names[i];
+    auto it = std::find(param_data.names.begin(), param_data.names.end(), name);
+    if (it != param_data.names.end()) {
+      col_map[i] = std::distance(param_data.names.begin(), it);
+    } else {
+      std::cerr << "Error: Parameter '" << name << "' not found in CSV header"
+                << std::endl;
+      std::cerr << "CSV headers found: ";
+      for (const auto &n : param_data.names)
+        std::cerr << n << " ";
+      std::cerr << std::endl;
+      exit(1);
+    }
+  }
+
   if (p_varies_node) {
-    // Parameters vary per node
     if (param_data.values.size() != num_nodes) {
       std::cerr << "Error: Parameter file has " << param_data.values.size()
                 << " rows but network has " << num_nodes << " nodes"
@@ -210,14 +250,15 @@ void run_simulation(const ConnData &conn_data, const ParamData &param_data,
     for (uint32_t node = 0; node < num_nodes; node++) {
       for (uint32_t p = 0; p < num_parm; p++) {
         params[node * num_parm * width + p * width] =
-            param_data.values[node][p];
+            param_data.values[node][col_map[p]];
       }
     }
   } else {
     // Global parameters
     for (uint32_t node = 0; node < num_nodes; node++) {
       for (uint32_t p = 0; p < num_parm; p++) {
-        params[node * num_parm * width + p * width] = param_data.values[0][p];
+        params[node * num_parm * width + p * width] =
+            param_data.values[0][col_map[p]];
       }
     }
   }
@@ -235,6 +276,8 @@ void run_simulation(const ConnData &conn_data, const ParamData &param_data,
   uint32_t num_outputs = num_steps / tavg_period;
   std::vector<float> output_data(num_outputs * num_svar * num_nodes);
 
+  auto start_time = std::chrono::steady_clock::now();
+
   for (uint32_t chunk = 0; chunk < num_outputs; chunk++) {
     uint32_t t0 = chunk * tavg_period;
     step_batch<Model, width>(cx, c, states.data(), tavg.data(),
@@ -249,14 +292,29 @@ void run_simulation(const ConnData &conn_data, const ParamData &param_data,
     // Progress bar
     if (chunk % (num_outputs / 20 + 1) == 0 || chunk == num_outputs - 1) {
       float progress = (float)(chunk + 1) / num_outputs;
+
+      auto current_time = std::chrono::steady_clock::now();
+      std::chrono::duration<double> elapsed = current_time - start_time;
+      double seconds = elapsed.count();
+      double steps_per_sec =
+          (seconds > 0.0) ? (double)((chunk + 1) * tavg_period) / seconds : 0.0;
+
       int barWidth = 40;
       std::cout << "\r[" << std::string(int(barWidth * progress), '=')
                 << std::string(barWidth - int(barWidth * progress), ' ') << "] "
-                << int(progress * 100.0) << "%" << std::flush;
+                << int(progress * 100.0) << "% (" << (int)steps_per_sec
+                << " steps/s)" << std::flush;
     }
   }
 
-  std::cout << "\nSimulation complete. Writing output..." << std::endl;
+  auto end_time = std::chrono::steady_clock::now();
+  std::chrono::duration<double> total_elapsed = end_time - start_time;
+  double avg_speed = (total_elapsed.count() > 0.0)
+                         ? (double)num_steps / total_elapsed.count()
+                         : 0.0;
+
+  std::cout << "\nSimulation complete. Average speed: " << (int)avg_speed
+            << " steps/s. Writing output..." << std::endl;
 
   // Write output
   write_csv_timeseries(output_file, output_data.data(), num_outputs, num_nodes,
@@ -265,7 +323,88 @@ void run_simulation(const ConnData &conn_data, const ParamData &param_data,
   std::cout << "Output written to " << output_file << std::endl;
 }
 
-// Model dispatcher
+// Helper to print model info
+template <typename Model> void print_model_info() {
+  std::cout << "Model: " << Model::name << "\n";
+  std::cout << "  State Variables (" << Model::num_svar << "): " << Model::svars
+            << "\n";
+  if constexpr (std::string_view(Model::svar_ranges).length() > 0) {
+    std::cout << "  Ranges: " << Model::svar_ranges << "\n";
+  }
+  std::cout << "  Variables of Interest: " << Model::voi << "\n";
+  std::cout << "  Parameters (" << Model::num_parm << "): " << Model::parms
+            << "\n";
+  std::cout << "  Coupling Variables (" << Model::num_cvar << ")\n";
+}
+
+void dispatch_info(const std::string &model_name) {
+  if (model_name == "wilson_cowan")
+    print_model_info<wilson_cowan>();
+  else if (model_name == "reduced_wong_wang")
+    print_model_info<reduced_wong_wang>();
+  else if (model_name == "reduced_wong_wang_exc_inh")
+    print_model_info<reduced_wong_wang_exc_inh>();
+  else if (model_name == "deco_balanced_exc_inh")
+    print_model_info<deco_balanced_exc_inh>();
+  else if (model_name == "kuramoto")
+    print_model_info<kuramoto>();
+  else if (model_name == "generic_2d")
+    print_model_info<generic_2d>();
+  else if (model_name == "sup_hopf")
+    print_model_info<sup_hopf>();
+  else if (model_name == "epileptor")
+    print_model_info<epileptor>();
+  else if (model_name == "epileptor_rs")
+    print_model_info<epileptor_rs>();
+  else if (model_name == "epileptor_codim3")
+    print_model_info<epileptor_codim3>();
+  else if (model_name == "epileptor_codim3_slow_mod")
+    print_model_info<epileptor_codim3_slow_mod>();
+  else if (model_name == "epileptor_2d")
+    print_model_info<epileptor_2d>();
+  else if (model_name == "coombes_byrne")
+    print_model_info<coombes_byrne>();
+  else if (model_name == "coombes_byrne_2d")
+    print_model_info<coombes_byrne_2d>();
+  else if (model_name == "gast_schmidt_knosche_sd")
+    print_model_info<gast_schmidt_knosche_sd>();
+  else if (model_name == "gast_schmidt_knosche_sf")
+    print_model_info<gast_schmidt_knosche_sf>();
+  else if (model_name == "zetterberg_jansen")
+    print_model_info<zetterberg_jansen>();
+  else if (model_name == "jr")
+    print_model_info<jr>();
+  else if (model_name == "mpr")
+    print_model_info<mpr>();
+  else if (model_name == "infinite_theta")
+    print_model_info<infinite_theta>();
+  else if (model_name == "dumont_gutkin")
+    print_model_info<dumont_gutkin>();
+  else if (model_name == "reduced_set_fitz_hugh_nagumo")
+    print_model_info<reduced_set_fitz_hugh_nagumo>();
+  else if (model_name == "reduced_set_hindmarsh_rose")
+    print_model_info<reduced_set_hindmarsh_rose>();
+  else if (model_name == "zerlaut_adaptation_first_order")
+    print_model_info<zerlaut_adaptation_first_order>();
+  else if (model_name == "zerlaut_adaptation_second_order")
+    print_model_info<zerlaut_adaptation_second_order>();
+  else if (model_name == "larter_breakspear")
+    print_model_info<larter_breakspear>();
+  else if (model_name == "hopfield")
+    print_model_info<hopfield>();
+  else if (model_name == "hopfield_dynamic")
+    print_model_info<hopfield_dynamic>();
+  else if (model_name == "linear")
+    print_model_info<linear>();
+  else if (model_name == "kionex")
+    print_model_info<kionex>();
+  else if (model_name == "kionex2")
+    print_model_info<kionex2>();
+  else {
+    std::cerr << "Error: Unknown model '" << model_name << "'\n";
+    exit(1);
+  }
+}
 void dispatch_model(const std::string &model_name, const ConnData &conn_data,
                     const ParamData &param_data, uint32_t num_nodes,
                     uint32_t num_steps, float dt, uint32_t tavg_period,
@@ -437,6 +576,7 @@ void print_usage(const char *prog_name) {
                "3.0)\n";
   std::cout << "  --noise FLOAT          Noise level sigma (default: 0.0)\n";
   std::cout << "  --seed INT             Random seed (default: 42)\n";
+  std::cout << "  --model-info MODEL     Show metadata for MODEL and exit\n";
   std::cout << "  --help                 Show this help message\n";
   std::cout << "\nAvailable models (28 total):\n";
   std::cout << "  Neural mass: wilson_cowan, reduced_wong_wang, "
@@ -477,6 +617,9 @@ int main(int argc, char **argv) {
     std::string arg = argv[i];
     if (arg == "--help" || arg == "-h") {
       print_usage(argv[0]);
+      return 0;
+    } else if (arg == "--model-info" && i + 1 < argc) {
+      dispatch_info(argv[++i]);
       return 0;
     } else if (arg == "--model" && i + 1 < argc) {
       model_name = argv[++i];

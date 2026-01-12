@@ -7,8 +7,13 @@
 namespace tvbk {
 
 struct kuramoto {
-  static const uint32_t num_svar = 1, num_parm = 1, num_cvar = 1;
-  static constexpr const char *const parms = "omega", *const name = "kuramoto";
+  static constexpr uint32_t num_svar = 1, num_parm = 1, num_cvar = 1;
+  static constexpr const char *const
+      parms = "omega",
+      *const name = "kuramoto", *const svars = "theta",
+      *const svar_ranges = "theta=[-3.141592653589793, 3.141592653589793]",
+      *const voi = "sin(theta)";
+  static constexpr float default_parms[1] = {60.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,
@@ -28,9 +33,12 @@ struct kuramoto {
 };
 
 struct sup_hopf {
-  static const uint32_t num_svar = 2, num_parm = 2, num_cvar = 2;
-  static constexpr const char *const parms = "a,omega", *const name =
-                                                            "sup_hopf";
+  static constexpr uint32_t num_svar = 2, num_parm = 2, num_cvar = 2;
+  static constexpr const char *const
+      parms = "a,omega",
+      *const name = "sup_hopf", *const svars = "x,y",
+      *const svar_ranges = "x=[-2.0, 2.0];y=[-2.0, 2.0]", *const voi = "x";
+  static constexpr float default_parms[2] = {0.0f, 60.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,
@@ -56,10 +64,14 @@ struct sup_hopf {
 };
 
 struct generic_2d {
-  static const uint32_t num_svar = 2, num_parm = 12, num_cvar = 1;
-  static constexpr const char *const parms =
-                                         "tau,I,a,b,c,d,e,f,g,alpha,beta,gamma",
-                                     *const name = "generic_2d";
+  static constexpr uint32_t num_svar = 2, num_parm = 12, num_cvar = 1;
+  static constexpr const char *const
+      parms = "tau,I,a,b,c,d,e,f,g,alpha,beta,gamma",
+      *const name = "generic_2d", *const svars = "V,W",
+      *const svar_ranges = "V=[-2.0, 2.0];W=[-2.0, 2.0]", *const voi = "V";
+  static constexpr float default_parms[12] = {1.0f, 0.0f,  -2.0f, -10.0f,
+                                              0.0f, 0.02f, 3.0f,  1.0f,
+                                              0.0f, 1.0f,  1.0f,  1.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

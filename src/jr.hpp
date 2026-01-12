@@ -8,10 +8,17 @@
 namespace tvbk {
 
 struct jr {
-  static const uint32_t num_svar = 6, num_parm = 14, num_cvar = 1;
+  static constexpr uint32_t num_svar = 6, num_parm = 14, num_cvar = 1;
   static constexpr const char
       *const parms = "A,B,a,b,v0,nu_max,r,J,a_1,a_2,a_3,a_4,mu,I",
-             *const name = "jr";
+             *const name = "jr", *const svars = "y0,y1,y2,y3,y4,y5",
+             *const svar_ranges =
+                 "y0=[-1.0, 1.0];y1=[-500.0, 500.0];y2=[-50.0, 50.0];y3=[-6.0, "
+                 "6.0];y4=[-20.0, 20.0];y5=[-500.0, 500.0]",
+             *const voi = "y0,y1,y2,y3";
+  static constexpr float default_parms[14] = {3.25f, 22.0f, 100.0f, 50.0f, 6.0f,
+                                              2.5f,  0.56f, 135.0f, 1.0f,  0.8f,
+                                              0.25f, 0.25f, 0.0f,   0.0f};
   // with width=8 & -O3 -mavx2 -fveclib=libmvec -ffast-math & __restrict inputs,
   // clang generates straight asm no jumps
   // gcc also good, but drop -fveclib=libmvec

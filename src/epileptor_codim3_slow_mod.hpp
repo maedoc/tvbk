@@ -8,13 +8,15 @@
 namespace tvbk {
 
 struct epileptor_codim3_slow_mod {
-  static const uint32_t num_svar = 5, num_parm = 21, num_cvar = 1;
+  static constexpr uint32_t num_svar = 5, num_parm = 21, num_cvar = 1;
   // Parameters: G(3), H(3), L(3), M(3), b, R, c, cA, cB, dstar, Ks,
   // modification, N Flattened: G0, G1, G2, H0, H1, H2, L0, L1, L2, M0, M1, M2,
   // b, R, c, cA, cB, dstar, Ks, modification, N
-  static constexpr const char *const parms =
-      "G0,G1,G2,H0,H1,H2,L0,L1,L2,M0,M1,M2,b,R,c,cA,cB,dstar,Ks,modification,N";
-  static constexpr const char *const name = "epileptor_codim3_slow_mod";
+  static constexpr const char
+      *const parms = "G,H,L,M,b,R,c,cA,cB,dstar,Ks,modification,N",
+             *const name = "epileptor_codim3_slow_mod", *const svars = "x,y,z",
+             *const svar_ranges = "x=[-2.5, 1.5];y=[-10.0, 2.0];z=[0.0, 1.5]",
+             *const voi = "x,y,z";
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

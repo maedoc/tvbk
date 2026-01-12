@@ -7,13 +7,16 @@ namespace tvbk {
 
 // GastSchmidtKnosche_SD (Synaptic Depression)
 struct gast_schmidt_knosche_sd {
-  static const uint32_t num_svar = 4, num_parm = 9, num_cvar = 4;
+  static constexpr uint32_t num_svar = 4, num_parm = 9, num_cvar = 4;
   // cvar=4 because TVB model defines cvar=[0,1,2,3].
   // Kernel must accept same shape even if only first 2 indices used.
 
-  static constexpr const char *const parms =
-      "tau,tau_A,alpha,I,Delta,J,eta,cr,cv";
-  static constexpr const char *const name = "gast_schmidt_knosche_sd";
+  static constexpr const char *const
+      parms = "tau,tau_A,alpha,I,Delta,J,eta,cr,cv",
+      *const name = "gast_schmidt_knosche_sd", *const svars = "E,I",
+      *const svar_ranges = "E=[-1.0, 1.0];I=[-1.0, 1.0]", *const voi = "E";
+  static constexpr float default_parms[9] = {1.0f,  1.0f,  0.05f, 0.0f, 1.0f,
+                                             15.0f, -5.0f, 1.0f,  0.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,
@@ -62,10 +65,13 @@ struct gast_schmidt_knosche_sd {
 
 // GastSchmidtKnosche_SF (Spike Frequency)
 struct gast_schmidt_knosche_sf {
-  static const uint32_t num_svar = 4, num_parm = 9, num_cvar = 4;
-  static constexpr const char *const parms =
-      "tau,tau_A,alpha,I,Delta,J,eta,cr,cv";
-  static constexpr const char *const name = "gast_schmidt_knosche_sf";
+  static constexpr uint32_t num_svar = 4, num_parm = 9, num_cvar = 4;
+  static constexpr const char *const
+      parms = "tau,tau_A,alpha,I,Delta,J,eta,cr,cv",
+      *const name = "gast_schmidt_knosche_sf", *const svars = "E,I",
+      *const svar_ranges = "E=[-1.0, 1.0];I=[-1.0, 1.0]", *const voi = "E";
+  static constexpr float default_parms[9] = {1.0f,  1.0f,  0.05f, 0.0f, 1.0f,
+                                             15.0f, -5.0f, 1.0f,  0.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

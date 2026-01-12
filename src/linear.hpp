@@ -7,8 +7,12 @@
 namespace tvbk {
 
 struct linear {
-  static const uint32_t num_svar = 1, num_parm = 1, num_cvar = 1;
-  static constexpr const char *const parms = "gamma", *const name = "linear";
+  static constexpr uint32_t num_svar = 1, num_parm = 1, num_cvar = 1;
+  static constexpr const char *const parms = "gamma", *const name = "linear",
+                                     *const svars = "x",
+                                     *const svar_ranges = "x=[-10.0, 10.0]",
+                                     *const voi = "x";
+  static constexpr float default_parms[1] = {-0.01f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

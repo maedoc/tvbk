@@ -7,16 +7,22 @@ namespace tvbk {
 
 // ReducedWongWangExcInh
 struct reduced_wong_wang_exc_inh {
-  static const uint32_t num_svar = 2, num_parm = 19, num_cvar = 1;
+  static constexpr uint32_t num_svar = 2, num_parm = 19, num_cvar = 1;
 
   // Param order:
   // a_e, b_e, d_e, gamma_e, tau_e, w_p, W_e, J_N, I_o, G, I_ext,
   // a_i, b_i, d_i, gamma_i, tau_i, W_i, J_i, lamda
-  static constexpr const char *const parms =
-      "a_e,b_e,d_e,gamma_e,tau_e,w_p,W_e,J_N,I_o,G,I_ext,"
-      "a_i,b_i,d_i,gamma_i,tau_i,W_i,J_i,lamda";
-
-  static constexpr const char *const name = "reduced_wong_wang_exc_inh";
+  static constexpr const char *const
+      parms = "a_e,b_e,d_e,gamma_e,tau_e,w_p,W_e,J_N,I_o,G,I_ext,a_i,b_i,d_i,"
+              "gamma_i,"
+              "tau_i,W_i,J_i,lamda",
+      *const name = "reduced_wong_wang_exc_inh", *const svars = "S_e,S_i",
+      *const svar_ranges = "S_e=[0.0, 1.0];S_i=[0.0, 1.0]",
+      *const voi = "S_e,S_i";
+  static constexpr float default_parms[19] = {
+      310.0f, 125.0f, 0.16f, 0.000641f, 100.0f, 1.4f,   1.0f,
+      0.15f,  0.382f, 2.0f,  0.0f,      615.0f, 177.0f, 0.087f,
+      0.001f, 10.0f,  0.7f,  1.0f,      0.0f};
 
   template <int width>
   INLINE static float H_func(float x, float a, float b, float d) {
@@ -92,14 +98,20 @@ struct reduced_wong_wang_exc_inh {
 
 // DecoBalancedExcInh
 struct deco_balanced_exc_inh {
-  static const uint32_t num_svar = 2, num_parm = 20, num_cvar = 1;
+  static constexpr uint32_t num_svar = 2, num_parm = 20, num_cvar = 1;
 
   // Params same as above + M_i
-  static constexpr const char *const parms =
-      "a_e,b_e,d_e,gamma_e,tau_e,w_p,W_e,J_N,I_o,G,I_ext,"
-      "a_i,b_i,d_i,gamma_i,tau_i,W_i,J_i,lamda,M_i";
-
-  static constexpr const char *const name = "deco_balanced_exc_inh";
+  static constexpr const char
+      *const parms = "a_e,b_e,d_e,gamma_e,tau_e,w_p,W_e,J_N,I_o,G,I_ext,a_i,b_"
+                     "i,d_i,gamma_i,"
+                     "tau_i,W_i,J_i,lamda,M_i",
+             *const name = "deco_balanced_exc_inh", *const svars = "S_e,S_i",
+             *const svar_ranges = "S_e=[0.0, 1.0];S_i=[0.0, 1.0]",
+             *const voi = "S_e,S_i";
+  static constexpr float default_parms[20] = {
+      310.0f, 125.0f, 0.16f, 0.000641f, 100.0f, 1.4f,   1.0f,
+      0.15f,  0.382f, 2.0f,  0.0f,      615.0f, 177.0f, 0.087f,
+      0.001f, 10.0f,  0.7f,  1.0f,      0.0f,   1.0f};
 
   template <int width>
   INLINE static float H_func_deco(float x, float a, float b, float d,

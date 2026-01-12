@@ -6,21 +6,31 @@
 namespace tvbk {
 
 struct zetterberg_jansen {
-  static const uint32_t num_svar = 12, num_parm = 18, num_cvar = 1;
+  static constexpr uint32_t num_svar = 12, num_parm = 18, num_cvar = 1;
 
   // Params: He, Hi, ke, ki, e0, rho_1, rho_2, gamma_1..5, gamma_1T..3T, P, Q, U
   // 17 params.
-  static constexpr const char *const parms =
-      "He,Hi,ke,ki,e0,rho_1,rho_2,gamma_1,gamma_2,gamma_3,gamma_4,gamma_5,"
-      "gamma_1T,gamma_2T,gamma_3T,P,Q,U";
+  static constexpr const char *const
+      parms =
+          "He,Hi,ke,ki,e0,rho_1,rho_2,gamma_1,gamma_2,gamma_3,gamma_4,gamma_5,"
+          "gamma_1T,gamma_2T,gamma_3T,P,Q,U",
+      *const name = "zetterberg_jansen",
+      *const svars = "v1,y1,v2,y2,v3,y3,v4,y4,v5,y5,v6,v7",
+      *const svar_ranges =
+          "v1=[-100.0, 100.0];y1=[-500.0, 500.0];v2=[-100.0, 50.0];y2=[-100.0, "
+          "6.0];v3=[-100.0, 6.0];y3=[-100.0, 6.0];v4=[-100.0, "
+          "20.0];y4=[-100.0, 20.0];v5=[-100.0, 20.0];y5=[-500.0, "
+          "500.0];v6=[-100.0, 20.0];v7=[-100.0, 20.0]",
+      *const voi = "v1";
+  static constexpr float default_parms[18] = {
+      3.25f,  22.0f,  100.0f, 50.0f, 2.5f,  6.0f,  6.0f, 135.0f, 108.0f,
+      33.75f, 33.75f, 33.75f, 68.0f, 54.0f, 17.0f, 0.0f, 0.0f,   0.0f};
   // Wait, count:
   // He, Hi, ke, ki, e0, rho_1, rho_2 (7)
   // gamma_1,2,3,4,5 (5) -> 12
   // gamma_1T,2T,3T (3) -> 15
   // P, Q, U (3) -> 18.
   // So 18 params.
-
-  static constexpr const char *const name = "zetterberg_jansen";
 
   template <int width>
   INLINE static float sigma_fun(float sv, float rho_1, float rho_2, float e0) {

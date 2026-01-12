@@ -12,7 +12,7 @@ namespace tvbk {
 // each). Also vectors: e_i (3), f_i (3), m_i (3), n_i (3), IE_i (3), II_i (3).
 // And scalars: tau, a, b, K11, K12, K21, sigma, mu.
 struct reduced_set_fitz_hugh_nagumo {
-  static const uint32_t num_svar = 12, num_parm = 53, num_cvar = 2;
+  static constexpr uint32_t num_svar = 12, num_parm = 53, num_cvar = 2;
   // 12 state vars: xi_0, eta_0, alpha_0, beta_0, xi_1...
   // Params:
   // Scalars (8): tau, a, b, K11, K12, K21, sigma, mu
@@ -25,10 +25,72 @@ struct reduced_set_fitz_hugh_nagumo {
       "e_0,e_1,e_2,f_0,f_1,f_2,m_0,m_1,m_2,n_0,n_1,n_2,IE_0,IE_1,IE_2,II_0,II_"
       "1,II_2,"
       "Aik_00,Aik_01,Aik_02,Aik_10,Aik_11,Aik_12,Aik_20,Aik_21,Aik_22,"
-      "Bik_00,Bik_01,Bik_02,Bik_10,Bik_11,Bik_12,Bik_20,Bik_21,Bik_22,"
+      "Bik_00,Bik_01,Bik_02,Bik_10,Bik_11,Bik_12,Bik_20,Bik_21,Bik_"
+      "22,"
       "Cik_00,Cik_01,Cik_02,Cik_10,Cik_11,Cik_12,Cik_20,Cik_21,Cik_22";
-
-  static constexpr const char *const name = "reduced_set_fitz_hugh_nagumo";
+  static constexpr const char *const
+      name = "reduced_set_fitz_hugh_nagumo",
+      *const svars = "xi_0,eta_0,alpha_0,beta_0,xi_1,eta_1,alpha_1,beta_1,xi_2,"
+                     "eta_2,alpha_2,beta_2",
+      *const svar_ranges =
+          "xi_0=[-2.0, 2.0];eta_0=[-2.0, 2.0];alpha_0=[-2.0, "
+          "2.0];beta_0=[-2.0, 2.0];xi_1=[-2.0, 2.0];eta_1=[-2.0, "
+          "2.0];alpha_1=[-2.0, 2.0];beta_1=[-2.0, 2.0];xi_2=[-2.0, "
+          "2.0];eta_2=[-2.0, 2.0];alpha_2=[-2.0, 2.0];beta_2=[-2.0, 2.0]",
+      *const voi = "xi_0";
+  static constexpr float default_parms[53] = {3.0f,
+                                              0.45f,
+                                              0.9f,
+                                              0.5f,
+                                              0.15f,
+                                              0.15f,
+                                              0.35f,
+                                              0.0f,
+                                              1.0283127964183962f,
+                                              3.3190009791326016f,
+                                              1.0283127964183838f,
+                                              1.0283127964183962f,
+                                              3.3190009791326016f,
+                                              1.0283127964183838f,
+                                              0.44376177872964995f,
+                                              0.2470067511613051f,
+                                              0.4437617787296524f,
+                                              0.44376177872964995f,
+                                              0.2470067511613051f,
+                                              0.4437617787296524f,
+                                              -0.6280522659370894f,
+                                              6.938893903907228e-18f,
+                                              0.6280522659370982f,
+                                              -0.6280522659370894f,
+                                              6.938893903907228e-18f,
+                                              0.6280522659370982f,
+                                              0.33281658111902224f,
+                                              0.18525241779532714f,
+                                              0.33281658111902407f,
+                                              0.5984537933538552f,
+                                              0.33311144470274784f,
+                                              0.5984537933538584f,
+                                              0.33281658111902046f,
+                                              0.18525241779532614f,
+                                              0.33281658111902224f,
+                                              0.33281658111902224f,
+                                              0.5984537933538552f,
+                                              0.33281658111902046f,
+                                              0.18525241779532714f,
+                                              0.33311144470274784f,
+                                              0.18525241779532614f,
+                                              0.33281658111902407f,
+                                              0.5984537933538584f,
+                                              0.33281658111902224f,
+                                              0.33281658111902224f,
+                                              0.18525241779532714f,
+                                              0.33281658111902407f,
+                                              0.5984537933538552f,
+                                              0.33311144470274784f,
+                                              0.5984537933538584f,
+                                              0.33281658111902046f,
+                                              0.18525241779532614f,
+                                              0.33281658111902224f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

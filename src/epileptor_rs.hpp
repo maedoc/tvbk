@@ -7,7 +7,7 @@
 namespace tvbk {
 
 struct epileptor_rs {
-  static const uint32_t num_svar = 8, num_parm = 27, num_cvar = 3;
+  static constexpr uint32_t num_svar = 8, num_parm = 27, num_cvar = 3;
   // Parameters based on Python implementation _numba_dfun signature:
   // x0, Iext, Iext2, a, b, slope, tt, Kvf, c, d, r, Ks, Kf, aa, bb, tau,
   // tau_rs, I_rs, a_rs, b_rs, d_rs, e_rs, f_rs, beta_rs, alpha_rs, gamma_rs,
@@ -25,10 +25,19 @@ struct epileptor_rs {
   // Python code: deriv = _numba_dfun(..., lc_1)
 
   // The params passed to check_model need to match this order.
-  static constexpr const char *const parms =
-      "x0,Iext,Iext2,a,b,slope,tt,Kvf,c,d,r,Ks,Kf,aa,bb,tau,"
-      "tau_rs,I_rs,a_rs,b_rs,d_rs,e_rs,f_rs,beta_rs,alpha_rs,gamma_rs,K_rs";
-  static constexpr const char *const name = "epileptor_rs";
+  static constexpr const char *const
+      parms = "x0,Iext,Iext2,a,b,slope,tt,Kvf,c,d,r,Ks,Kf,aa,bb,tau,"
+              "tau_rs,I_rs,a_rs,b_rs,d_rs,e_rs,f_rs,beta_rs,alpha_rs,"
+              "gamma_rs,K_rs",
+      *const name = "epileptor_rs", *const svars = "x1,y1,z,x2,y2,g,x_rs,z_rs",
+      *const svar_ranges =
+          "x1=[-2.0, 1.0];y1=[-20.0, 2.0];z=[2.0, 5.0];x2=[-2.0, 0.0];y2=[0.0, "
+          "2.0];g=[-1.0, 1.0];x_rs=[-2.0, 1.0];z_rs=[2.0, 5.0]",
+      *const voi = "x2-x1,x1,x2,z";
+  static constexpr float default_parms[27] = {
+      -1.6f, 0.0f,   0.45f, 1.0f, 3.0f, 0.0f, 1.0f,  0.0f, 0.3f,
+      5.0f,  0.0f,   0.0f,  0.0f, 6.0f, 2.0f, 10.0f, 1.0f, 0.0f,
+      -2.0f, -10.0f, 0.02f, 3.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

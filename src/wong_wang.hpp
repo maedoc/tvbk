@@ -7,9 +7,13 @@
 namespace tvbk {
 
 struct reduced_wong_wang {
-  static const uint32_t num_svar = 1, num_parm = 8, num_cvar = 1;
-  static constexpr const char *const parms = "a,b,d,gamma,tau_s,w,J_N,I_o",
-                                     *const name = "reduced_wong_wang";
+  static constexpr uint32_t num_svar = 1, num_parm = 8, num_cvar = 1;
+  static constexpr const char
+      *const parms = "a,b,d,gamma,tau_s,w,J_N,I_o",
+             *const name = "reduced_wong_wang", *const svars = "S",
+             *const svar_ranges = "S=[0.0, 1.0]", *const voi = "S";
+  static constexpr float default_parms[8] = {0.27f,  0.108f, 0.154f,  0.000641f,
+                                             100.0f, 0.6f,   0.2609f, 0.3f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

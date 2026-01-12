@@ -7,12 +7,19 @@
 namespace tvbk {
 
 struct larter_breakspear {
-  static const uint32_t num_svar = 3, num_parm = 32, num_cvar = 1;
+  static constexpr uint32_t num_svar = 3, num_parm = 32, num_cvar = 1;
   // Parameter list (32 params) based on source inspection
-  static constexpr const char *const parms =
-      "gCa,gK,gL,phi,gNa,TK,TCa,TNa,VCa,VK,VL,VNa,d_K,tau_K,d_Na,d_Ca,aei,aie,"
-      "b,C,ane,ani,aee,Iext,rNMDA,VT,d_V,ZT,d_Z,QV_max,QZ_max,t_scale";
-  static constexpr const char *const name = "larter_breakspear";
+  static constexpr const char *const
+      parms = "gCa,gK,gL,phi,gNa,TK,TCa,TNa,VCa,VK,VL,VNa,d_K,tau_K,d_Na,d_Ca,"
+              "aei,aie,"
+              "b,C,ane,ani,aee,Iext,rNMDA,VT,d_V,ZT,d_Z,QV_max,QZ_max,t_scale",
+      *const name = "larter_breakspear", *const svars = "V,W,Z",
+      *const svar_ranges = "V=[-1.5, 1.5];W=[-1.5, 1.5];Z=[-1.5, 1.5]",
+      *const voi = "V";
+  static constexpr float default_parms[32] = {
+      1.1f, 2.0f, 0.5f,  0.7f,  6.7f,  1.0f, 1.0f,  1.0f, 1.0f,   -0.7f, -0.5f,
+      0.5f, 0.3f, 1.0f,  0.15f, 0.15f, 2.0f, 2.0f,  0.1f, 310.0f, 1.0f,  0.4f,
+      1.0f, 0.3f, 0.25f, 0.0f,  0.65f, 0.0f, 0.65f, 1.0f, 1.0f,   1.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

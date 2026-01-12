@@ -7,11 +7,17 @@
 namespace tvbk {
 
 struct wilson_cowan {
-  static const uint32_t num_svar = 2, num_parm = 23, num_cvar = 2;
+  static constexpr uint32_t num_svar = 2, num_parm = 23, num_cvar = 2;
   static constexpr const char *const
       parms = "c_ee,c_ei,c_ie,c_ii,tau_e,tau_i,a_e,b_e,c_e,theta_e,a_i,b_i,"
-              "theta_i,c_i,r_e,r_i,k_e,k_i,P,Q,alpha_e,alpha_i,shift_sigmoid",
-      *const name = "wilson_cowan";
+              "theta_i,c_i,"
+              "r_e,r_i,k_e,k_i,P,Q,alpha_e,alpha_i,shift_sigmoid",
+      *const name = "wilson_cowan", *const svars = "E,I",
+      *const svar_ranges = "E=[-0.5, 0.5];I=[-0.5, 0.5]", *const voi = "E,I";
+  static constexpr float default_parms[23] = {
+      12.0f, 4.0f, 13.0f, 11.0f, 10.0f, 10.0f, 1.2f, 2.8f,
+      1.0f,  0.0f, 1.0f,  4.0f,  0.0f,  1.0f,  0.0f, 0.0f,
+      1.0f,  1.0f, 0.5f,  0.0f,  1.0f,  1.0f,  0.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

@@ -13,7 +13,7 @@ namespace tvbk {
 // II_i (12 vectors * 3 = 36) Matrices (3x3): Aik, Bik, Cik (3 * 9 = 27) Total =
 // 5 + 36 + 27 = 68.
 struct reduced_set_hindmarsh_rose {
-  static const uint32_t num_svar = 18, num_parm = 68, num_cvar = 2;
+  static constexpr uint32_t num_svar = 18, num_parm = 68, num_cvar = 2;
 
   static constexpr const char *const parms =
       "r,s,K11,K12,K21,"
@@ -25,6 +25,79 @@ struct reduced_set_hindmarsh_rose {
       "Cik_00,Cik_01,Cik_02,Cik_10,Cik_11,Cik_12,Cik_20,Cik_21,Cik_22";
 
   static constexpr const char *const name = "reduced_set_hindmarsh_rose";
+  static constexpr const char *const svars = "xi,eta,tau,alpha,beta,gamma";
+  static constexpr const char *const svar_ranges =
+      "xi=[-4.0, 4.0];eta=[-25.0, 20.0];tau=[2.0, 10.0];alpha=[-4.0, "
+      "4.0];beta=[-20.0, 20.0];gamma=[2.0, 10.0]";
+  static constexpr const char *const voi = "xi,eta,tau";
+  static constexpr float default_parms[68] = {0.006f,
+                                              4.0f,
+                                              0.5f,
+                                              0.1f,
+                                              0.15f,
+                                              1.0f,
+                                              1.0f,
+                                              1.0f,
+                                              3.0f,
+                                              3.0f,
+                                              3.0f,
+                                              1.0f,
+                                              1.0f,
+                                              1.0f,
+                                              5.0f,
+                                              5.0f,
+                                              5.0f,
+                                              1.1996982624881274f,
+                                              3.872167808988035f,
+                                              1.1996982624881147f,
+                                              3.285922147950731f,
+                                              5.903347379317289f,
+                                              3.285922147950714f,
+                                              1.0f,
+                                              1.0f,
+                                              1.0f,
+                                              1.0f,
+                                              1.0f,
+                                              1.0f,
+                                              -0.035058651670078246f,
+                                              -0.01951435221373041f,
+                                              -0.03505865167007843f,
+                                              -0.035058651670078246f,
+                                              -0.01951435221373041f,
+                                              -0.03505865167007843f,
+                                              2.5144556680297034f,
+                                              1.6770146433674569f,
+                                              3.511250087765018f,
+                                              2.5144556680297034f,
+                                              1.6770146433674569f,
+                                              3.511250087765018f,
+                                              0.33281658111902224f,
+                                              0.18525241779532714f,
+                                              0.33281658111902407f,
+                                              0.5984537933538552f,
+                                              0.33311144470274784f,
+                                              0.5984537933538584f,
+                                              0.33281658111902046f,
+                                              0.18525241779532614f,
+                                              0.33281658111902224f,
+                                              0.33281658111902224f,
+                                              0.5984537933538552f,
+                                              0.33281658111902046f,
+                                              0.18525241779532714f,
+                                              0.33311144470274784f,
+                                              0.18525241779532614f,
+                                              0.33281658111902407f,
+                                              0.5984537933538584f,
+                                              0.33281658111902224f,
+                                              0.33281658111902224f,
+                                              0.18525241779532714f,
+                                              0.33281658111902407f,
+                                              0.5984537933538552f,
+                                              0.33311144470274784f,
+                                              0.5984537933538584f,
+                                              0.33281658111902046f,
+                                              0.18525241779532614f,
+                                              0.33281658111902224f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

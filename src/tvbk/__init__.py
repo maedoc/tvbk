@@ -1,5 +1,5 @@
 from .tvbk_ext import (
-    randn, __doc__, Cx, Cx8, Conn, cx_j, cx_j8,
+    randn, __doc__, Cx, Cx8, Conn, cx_j, cx_j8, model_infos,
     cxs8_j, Cx8s, dfun_jr8, dfun_mpr8, dfun_kionex8, dfun_kionex2_8,
     dfun_kuramoto8, dfun_sup_hopf8, dfun_generic_2d8, dfun_wilson_cowan8, dfun_reduced_wong_wang8,
     dfun_epileptor8, dfun_epileptor_2d8, dfun_epileptor_rs8, dfun_epileptor_codim3_8, dfun_epileptor_codim3_slow_mod_8,

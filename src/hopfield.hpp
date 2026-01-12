@@ -7,11 +7,14 @@
 namespace tvbk {
 
 struct hopfield {
-  static const uint32_t num_svar = 2, num_parm = 3, num_cvar = 1;
+  static constexpr uint32_t num_svar = 2, num_parm = 3, num_cvar = 1;
   // Params: taux, tauT, dynamic. Even if dynamic=0, generic class has 3 params.
   // dfun uses taux.
-  static constexpr const char *const parms = "taux,tauT,dynamic",
-                                     *const name = "hopfield";
+  static constexpr const char *const
+      parms = "taux,tauT,dynamic",
+      *const name = "hopfield", *const svars = "x,theta",
+      *const svar_ranges = "x=[-2.0, 2.0];theta=[-0.1, 0.1]", *const voi = "x";
+  static constexpr float default_parms[3] = {1.0f, 5.0f, 0.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,
@@ -32,9 +35,12 @@ struct hopfield {
 };
 
 struct hopfield_dynamic {
-  static const uint32_t num_svar = 2, num_parm = 3, num_cvar = 2;
-  static constexpr const char *const parms = "taux,tauT,dynamic",
-                                     *const name = "hopfield_dynamic";
+  static constexpr uint32_t num_svar = 2, num_parm = 3, num_cvar = 2;
+  static constexpr const char *const
+      parms = "taux,tauT,dynamic",
+      *const name = "hopfield_dynamic", *const svars = "x,theta",
+      *const svar_ranges = "x=[-2.0, 2.0];theta=[-0.1, 0.1]", *const voi = "x";
+  static constexpr float default_parms[3] = {1.0f, 5.0f, 1.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

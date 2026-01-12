@@ -109,7 +109,7 @@ INLINE float TF(float fe, float fi, float fe_ext, float fi_ext, float W,
 } // namespace zerlaut_impl
 
 struct zerlaut_adaptation_first_order {
-  static const uint32_t num_svar = 5, num_parm = 50, num_cvar = 1;
+  static constexpr uint32_t num_svar = 5, num_parm = 50, num_cvar = 1;
 
   // Params list is HUGE.
   // Order:
@@ -119,23 +119,42 @@ struct zerlaut_adaptation_first_order {
   // external_input_ex_ex, external_input_ex_in, external_input_in_ex,
   // external_input_in_in, tau_OU, weight_noise, S_i, T, P_e (10), P_i (10)
 
-  static constexpr const char *const parms =
-      "g_L,E_L_e,E_L_i,C_m,b_e,a_e,b_i,a_i,tau_w_e,tau_w_i,"
-      "E_e,E_i,Q_e,Q_i,tau_e,tau_i,"
-      "N_tot,p_connect_e,p_connect_i,g,K_ext_e,K_ext_i,"
-      "external_input_ex_ex,external_input_ex_in,external_input_in_ex,external_"
-      "input_in_in,"
-      "tau_OU,weight_noise,S_i,T,"
-      "P_e,P_i"; // P_e and P_i are vectors of size 10? No, param string just
-                 // lists names. tvbk extractor will see P_e and extract 10
-                 // floats? Wait, tvbk::check_model expands vectors. Kernel
-                 // expects continuous array of floats. We need to unpack them
-                 // carefully. If param string has "P_e", the extractor will put
-                 // 10 values? The kernel just receives a pointer `p`. We need
-                 // to assume the caller passes 30 scalar + 20 vector elements =
-                 // 50 floats per node.
-
-  static constexpr const char *const name = "zerlaut_adaptation_first_order";
+  static constexpr const char *const
+      parms = "g_L,E_L_e,E_L_i,C_m,b_e,a_e,b_i,a_i,tau_w_e,tau_w_i,"
+              "E_e,E_i,Q_e,Q_i,tau_e,tau_i,"
+              "N_tot,p_connect_e,p_connect_i,g,K_ext_e,K_ext_i,"
+              "external_input_ex_ex,external_input_ex_in,external_input_in_ex,"
+              "external_"
+              "input_in_in,"
+              "tau_OU,weight_noise,S_i,T,"
+              "P_e,P_i",
+      *const name = "zerlaut_adaptation_first_order",
+      *const svars = "E,I,W_e,W_i,ou_drift",
+      *const svar_ranges = "E=[0.0001, 0.25];I=[0.0001, 0.25];W_e=[0.0, "
+                           "200.0];W_i=[0.0, 200.0];ou_drift=[-0.5, 0.5]",
+      *const voi = "E";
+  static constexpr float default_parms[50] = {
+      10.0f,          -65.0f,        -65.0f,         200.0f,
+      60.0f,          4.0f,          0.0f,           0.0f,
+      500.0f,         1.0f,          0.0f,           -80.0f,
+      1.5f,           5.0f,          5.0f,           5.0f,
+      10000.0f,       0.05f,         0.05f,          0.2f,
+      400.0f,         0.0f,          0.0f,           0.0f,
+      0.0f,           0.0f,          5.0f,           10.5f,
+      1.0f,           20.0f,         -0.04983106f,   0.0050635508f,
+      -0.023470122f,  0.0022951514f, -0.0004105303f, 0.0105470513f,
+      -0.036592528f,  0.0074374875f, 0.0012650647f,  -0.040721613f,
+      -0.05149122f,   0.0040036892f, -0.008352014f,  0.0002414238f,
+      -0.0005070645f, 0.0014345394f, -0.0146866895f, 0.0045027063f,
+      0.002847219f,   -0.015357805f};
+  // P_e and P_i are vectors of size 10? No, param string just
+  // lists names. tvbk extractor will see P_e and extract 10
+  // floats? Wait, tvbk::check_model expands vectors. Kernel
+  // expects continuous array of floats. We need to unpack them
+  // carefully. If param string has "P_e", the extractor will put
+  // 10 values? The kernel just receives a pointer `p`. We need
+  // to assume the caller passes 30 scalar + 20 vector elements =
+  // 50 floats per node.
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

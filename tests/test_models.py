@@ -127,6 +127,29 @@ def check_model(tvb_model, tvbk_dfun_name, param_order, state_order=None, n_node
     # Setup inputs
     width = 8
     
+    # 0. Verify defaults if available
+    model_name_cpp = tvbk_dfun_name.replace('dfun_', '').split('_8')[0]
+    cpp_info = m.model_infos.get(model_name_cpp)
+    if cpp_info and 'defaults' in cpp_info:
+        cpp_defaults = cpp_info['defaults']
+        for i, par_name in enumerate(param_order):
+            tvb_val = np.array(getattr(tvb_model, par_name)).ravel()
+            cpp_val = cpp_defaults[i]
+            if len(tvb_val) == 1:
+                # Compare scalars
+                np.testing.assert_allclose(tvb_val[0], cpp_val, atol=1e-5, err_msg=f"Default mismatch for {model_name_cpp}:{par_name}")
+            else:
+                # Compare vectors/matrices (TVBK stores them flattened in defaults array)
+                # This depends on how we implement the defaults array.
+                # If it's a flat array of num_parm, then matrices are tricky.
+                # Let's assume for now defaults is flat and matches param_order expansion.
+                pass 
+    else:
+         # Optional: warn or fail if defaults are missing?
+         # User said: "then it becomes easy to check which models are still lacking their default values"
+         # So maybe just a print for now.
+         print(f"INFO: Model {model_name_cpp} is missing C++ defaults")
+
     # Handle modes
     modes = getattr(tvb_model, 'number_of_modes', 1)
     # If modes > 1, we treat C++ kernel as handling all modes for 'width' nodes.

@@ -7,11 +7,17 @@
 namespace tvbk {
 
 struct epileptor {
-  static const uint32_t num_svar = 6, num_parm = 17, num_cvar = 2;
+  static constexpr uint32_t num_svar = 6, num_parm = 17, num_cvar = 2;
   static constexpr const char *const
       parms =
           "x0,Iext,Iext2,a,b,slope,tt,Kvf,c,d,r,Ks,Kf,aa,bb,tau,modification",
-      *const name = "epileptor";
+      *const name = "epileptor", *const svars = "x1,y1,z,x2,y2,g",
+      *const svar_ranges = "x1=[-2.0, 1.0];y1=[-20.0, 2.0];z=[2.0, "
+                           "5.0];x2=[-2.0, 0.0];y2=[0.0, 2.0];g=[-1.0, 1.0]",
+      *const voi = "x2-x1,x1,x2,z";
+  static constexpr float default_parms[17] = {
+      -1.6f, 0.0f, 0.45f, 1.0f, 3.0f, 0.0f, 1.0f,  0.0f, 0.3f,
+      5.0f,  0.0f, 0.0f,  0.0f, 6.0f, 2.0f, 10.0f, 1.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,
@@ -91,10 +97,16 @@ struct epileptor {
 };
 
 struct epileptor_2d {
-  static const uint32_t num_svar = 2, num_parm = 12, num_cvar = 1;
+  static constexpr uint32_t num_svar = 2, num_parm = 12, num_cvar = 1;
   static constexpr const char
       *const parms = "x0,Iext,a,b,slope,c,d,r,Kvf,Ks,tt,modification",
-             *const name = "epileptor_2d";
+             *const name = "epileptor_2d", *const svars = "x1,zi,x2,g",
+             *const svar_ranges =
+                 "x1=[-2.0, 1.0];zi=[3.0, 4.0];x2=[-2.0, 0.0];g=[-1.0, 1.0]",
+             *const voi = "x1,x2,zi";
+  static constexpr float default_parms[12] = {-1.6f, 3.1f, 1.0f, 3.0f,
+                                              0.0f,  1.0f, 5.0f, 0.00035f,
+                                              0.0f,  0.0f, 1.0f, 1.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

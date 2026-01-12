@@ -1,5 +1,6 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
+#include <type_traits>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -18,6 +19,13 @@ typedef nb::ndarray<float, nb::numpy, nb::device::cpu, nb::shape<-1, -1>,
 typedef nb::ndarray<float, nb::numpy, nb::device::cpu, nb::shape<-1, -1, -1>,
                     nb::c_contig>
     farr3;
+
+template <typename T, typename = void>
+struct has_default_parms : std::false_type {};
+
+template <typename T>
+struct has_default_parms<T, std::void_t<decltype(T::default_parms)>>
+    : std::true_type {};
 typedef nb::ndarray<float, nb::numpy, nb::device::cpu,
                     nb::shape<-1, -1, -1, -1>, nb::c_contig>
     farr4;
@@ -32,6 +40,11 @@ using farr =
 extern "C" void coupling_kernel_cpu(void *out, const void **in);
 
 extern "C" void coupling_batch_kernel_cpu(void *out, const void **in);
+
+// Helper type wrapper to pass type as value
+template <typename T> struct TypeWrapper {
+  using type = T;
+};
 
 // boilerplate for declaring a model stepping function
 template <typename model, typename M, int width = 8> void decl_step(M m) {
@@ -691,4 +704,62 @@ NB_MODULE(tvbk_ext, m) {
         (void *)coupling_batch_kernel_cpu, "xla._CUSTOM_CALL_TARGET");
     return dict;
   });
+
+  // Model Metadata
+  nb::dict model_infos;
+  auto add_info = [&](auto t) {
+    using Model = typename decltype(t)::type;
+    nb::dict info;
+    info["num_svar"] = Model::num_svar;
+    info["num_parm"] = Model::num_parm;
+    info["num_cvar"] = Model::num_cvar;
+    info["parms"] = Model::parms;
+    info["svars"] = Model::svars;
+    info["svar_ranges"] = Model::svar_ranges;
+    info["voi"] = Model::voi;
+
+    info["voi"] = Model::voi;
+    if constexpr (has_default_parms<Model>::value) {
+      nb::list defaults;
+      for (uint32_t i = 0; i < Model::num_parm; i++) {
+        defaults.append(Model::default_parms[i]);
+      }
+      info["defaults"] = defaults;
+    }
+    model_infos[Model::name] = info;
+  };
+
+  add_info(TypeWrapper<tvbk::jr>());
+  add_info(TypeWrapper<tvbk::mpr>());
+  add_info(TypeWrapper<tvbk::kionex>());
+  add_info(TypeWrapper<tvbk::kionex2>());
+  add_info(TypeWrapper<tvbk::kuramoto>());
+  add_info(TypeWrapper<tvbk::sup_hopf>());
+  add_info(TypeWrapper<tvbk::generic_2d>());
+  add_info(TypeWrapper<tvbk::wilson_cowan>());
+  add_info(TypeWrapper<tvbk::reduced_wong_wang>());
+  add_info(TypeWrapper<tvbk::reduced_wong_wang_exc_inh>());
+  add_info(TypeWrapper<tvbk::deco_balanced_exc_inh>());
+  add_info(TypeWrapper<tvbk::epileptor>());
+  add_info(TypeWrapper<tvbk::epileptor_rs>());
+  add_info(TypeWrapper<tvbk::epileptor_codim3>());
+  add_info(TypeWrapper<tvbk::epileptor_codim3_slow_mod>());
+  add_info(TypeWrapper<tvbk::epileptor_2d>());
+  add_info(TypeWrapper<tvbk::coombes_byrne>());
+  add_info(TypeWrapper<tvbk::coombes_byrne_2d>());
+  add_info(TypeWrapper<tvbk::gast_schmidt_knosche_sd>());
+  add_info(TypeWrapper<tvbk::gast_schmidt_knosche_sf>());
+  add_info(TypeWrapper<tvbk::zetterberg_jansen>());
+  add_info(TypeWrapper<tvbk::zerlaut_adaptation_first_order>());
+  add_info(TypeWrapper<tvbk::zerlaut_adaptation_second_order>());
+  add_info(TypeWrapper<tvbk::linear>());
+  add_info(TypeWrapper<tvbk::hopfield>());
+  add_info(TypeWrapper<tvbk::hopfield_dynamic>());
+  add_info(TypeWrapper<tvbk::larter_breakspear>());
+  add_info(TypeWrapper<tvbk::infinite_theta>());
+  add_info(TypeWrapper<tvbk::dumont_gutkin>());
+  add_info(TypeWrapper<tvbk::reduced_set_fitz_hugh_nagumo>());
+  add_info(TypeWrapper<tvbk::reduced_set_hindmarsh_rose>());
+
+  m.attr("model_infos") = model_infos;
 }

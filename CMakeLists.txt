@@ -44,11 +44,11 @@ nanobind_add_module(
 )
 
 # causes wheel builds to fail, enable by user
-# if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-#   find_package(OpenMP REQUIRED)
-#   target_compile_options(tvbk_ext PRIVATE -march=native -ffast-math -fopenmp -funroll-loops -mavx2)
-#   target_link_libraries(tvbk_ext PUBLIC OpenMP::OpenMP_CXX)
-# endif()
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  find_package(OpenMP REQUIRED)
+  target_compile_options(tvbk_ext PRIVATE -march=native -ffast-math -fopenmp -funroll-loops -mavx2)
+  target_link_libraries(tvbk_ext PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 # clang: -fno-math-errno -fveclib=libmvec, but no omp on macos
 

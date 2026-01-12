@@ -6,10 +6,15 @@
 namespace tvbk {
 
 struct coombes_byrne {
-  static const uint32_t num_svar = 4, num_parm = 5, num_cvar = 4;
+  static constexpr uint32_t num_svar = 4, num_parm = 5, num_cvar = 4;
   // Params: Delta, alpha, v_syn, k, eta
-  static constexpr const char *const parms = "Delta,alpha,v_syn,k,eta";
-  static constexpr const char *const name = "coombes_byrne";
+  static constexpr const char
+      *const parms = "Delta,alpha,v_syn,k,eta",
+             *const name = "coombes_byrne", *const svars = "r,V,g,q",
+             *const svar_ranges =
+                 "r=[0.0, 1.0];V=[-100.0, 100.0];g=[0.0, 100.0];q=[0.0, 100.0]",
+             *const voi = "V";
+  static constexpr float default_parms[5] = {1.0f, 0.05f, 0.0f, 1.0f, -5.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,
@@ -41,10 +46,13 @@ struct coombes_byrne {
 };
 
 struct coombes_byrne_2d {
-  static const uint32_t num_svar = 2, num_parm = 4, num_cvar = 2;
+  static constexpr uint32_t num_svar = 2, num_parm = 4, num_cvar = 2;
   // Params: Delta, v_syn, k, eta (alpha not used?)
-  static constexpr const char *const parms = "Delta,v_syn,k,eta";
-  static constexpr const char *const name = "coombes_byrne_2d";
+  static constexpr const char *const
+      parms = "Delta,v_syn,k,eta",
+      *const name = "coombes_byrne_2d", *const svars = "r,V",
+      *const svar_ranges = "r=[0.0, 1.0];V=[-100.0, 100.0]", *const voi = "V";
+  static constexpr float default_parms[4] = {1.0f, 0.0f, 1.0f, -5.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

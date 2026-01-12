@@ -11,7 +11,8 @@ namespace tvbk {
 // Params: I_e, Delta_e, eta_e, tau_e, I_i, Delta_i, eta_i, tau_i, tau_s, J_ee,
 // J_ei, J_ie, J_ii, Gamma
 struct dumont_gutkin {
-  static const uint32_t num_svar = 8, num_parm = 14, num_cvar = 4; // cvar is 4
+  static constexpr uint32_t num_svar = 8, num_parm = 14,
+                            num_cvar = 4; // cvar is 4
   // Python cvar: [0, 1, 4, 5]. 4 indices. But only 2 inputs typcially?
   // "The neural masses are coupled through the firing rate of E_i ... into E_j
   // and I_j". So coupling is likely just E activity. Let's assume standard
@@ -21,7 +22,16 @@ struct dumont_gutkin {
       "I_e,Delta_e,eta_e,tau_e,I_i,Delta_i,eta_i,tau_i,tau_s,J_ee,J_ei,J_ie,J_"
       "ii,Gamma";
 
-  static constexpr const char *const name = "dumont_gutkin";
+  static constexpr const char *const
+      name = "dumont_gutkin",
+      *const svars = "r_e,V_e,s_ee,s_ei,r_i,V_i,s_ie,s_ii",
+      *const svar_ranges = "r_e=[0.0, 2.0];V_e=[-2.0, 1.5];s_ee=[-1.0, "
+                           "1.0];s_ei=[-1.0, 1.0];r_i=[0.0, 2.0];V_i=[-2.0, "
+                           "1.5];s_ie=[-1.0, 1.0];s_ii=[-1.0, 1.0]",
+      *const voi = "r_e,V_e,s_ee,s_ei,r_i,V_i,s_ie,s_ii";
+  static constexpr float default_parms[14] = {0.0f,  1.0f,  -5.0f, 10.0f, 0.0f,
+                                              1.0f,  -5.0f, 10.0f, 1.0f,  0.0f,
+                                              10.0f, 0.0f,  15.0f, 5.0f};
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,

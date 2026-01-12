@@ -8,12 +8,14 @@
 namespace tvbk {
 
 struct epileptor_codim3 {
-  static const uint32_t num_svar = 3, num_parm = 13, num_cvar = 1;
+  static constexpr uint32_t num_svar = 3, num_parm = 13, num_cvar = 1;
   // Parameters: E(3), F(3), b, R, c, dstar, Ks, modification, N
   // Flattened: E0, E1, E2, F0, F1, F2, b, R, c, dstar, Ks, modification, N
-  static constexpr const char *const parms =
-      "E0,E1,E2,F0,F1,F2,b,R,c,dstar,Ks,modification,N";
-  static constexpr const char *const name = "epileptor_codim3";
+  static constexpr const char
+      *const parms = "E,F,b,R,c,dstar,Ks,modification,N",
+             *const name = "epileptor_codim3", *const svars = "x,y,z",
+             *const svar_ranges = "x=[-2.5, 1.5];y=[-10.0, 2.0];z=[0.0, 1.0]",
+             *const voi = "x,y,z";
 
   template <int width>
   INLINE static void dfun(float *__restrict dx, const float *__restrict x,
